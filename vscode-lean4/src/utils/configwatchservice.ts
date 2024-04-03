@@ -1,17 +1,16 @@
-import { EventEmitter, Disposable, Uri, workspace, window, WorkspaceFolder } from 'vscode';
+import { EventEmitter, Disposable, Uri, workspace, window } from 'vscode';
 import { findLeanPackageRoot, findLeanPackageVersionInfo } from './projectInfo';
 import * as path from 'path';
-import { fileExists } from './fsHelper';
 
 // This service monitors the Lean package root folders for changes to any
-// lean-toolchain, leanpkg.toml or lakefile.lean files found there.
-export class LeanpkgService implements Disposable {
+// lean-toolchail, lakefile.lean or lakefile.toml files found there.
+export class LeanConfigWatchService implements Disposable {
     private subscriptions: Disposable[] = [];
-    private lakeFileLeanName : string = 'lakefile.lean'
+    private lakeFileLeanName: string = 'lakefile.lean'
     private lakeFileTomlName: string = 'lakefile.toml'
     // We track the current version info for each workspace open in VS code.
-    private currentVersion : Map<string,string> = new Map();
-    private normalizedLakeFileContents : Map<string,string> = new Map();
+    private currentVersion : Map<string, string> = new Map();
+    private normalizedLakeFileContents : Map<string, string> = new Map();
 
     // This event is raised when the version in the package root changes.
     // The event provides the lean package root Uri.
@@ -24,28 +23,23 @@ export class LeanpkgService implements Disposable {
     lakeFileChanged = this.lakeFileChangedEmitter.event
 
     constructor() {
-        // track changes in the version of lean specified in the lean-toolchain file
-        // or the leanpkg.toml.  While this is looking for all files with these names
-        // it ignores files that are not in the package root.
-        ['**/lean-toolchain', '**/leanpkg.toml'].forEach(pattern => {
-            const watcher = workspace.createFileSystemWatcher(pattern);
-            watcher.onDidChange((u) => this.handleFileChanged(u, true));
-            watcher.onDidCreate((u) => this.handleFileChanged(u, true));
-            watcher.onDidDelete((u) => this.handleFileChanged(u, true));
-            this.subscriptions.push(watcher);
+        const watcher1 = workspace.createFileSystemWatcher('**/lean-toolchain');
+        watcher1.onDidChange((u) => this.handleFileChanged(u, true));
+        watcher1.onDidCreate((u) => this.handleFileChanged(u, true));
+        watcher1.onDidDelete((u) => this.handleFileChanged(u, true));
+        this.subscriptions.push(watcher1);
 
-            const watcher2 = workspace.createFileSystemWatcher(`**/${this.lakeFileLeanName}`);
-            watcher2.onDidChange((u) => this.handleLakeFileChanged(u, true));
-            watcher2.onDidCreate((u) => this.handleLakeFileChanged(u, true));
-            watcher2.onDidDelete((u) => this.handleLakeFileChanged(u, true));
-            this.subscriptions.push(watcher2);
+        const watcher2 = workspace.createFileSystemWatcher(`**/${this.lakeFileLeanName}`);
+        watcher2.onDidChange((u) => this.handleLakeFileChanged(u, true));
+        watcher2.onDidCreate((u) => this.handleLakeFileChanged(u, true));
+        watcher2.onDidDelete((u) => this.handleLakeFileChanged(u, true));
+        this.subscriptions.push(watcher2);
 
-            const watcher3 = workspace.createFileSystemWatcher(`**/${this.lakeFileTomlName}`);
-            watcher3.onDidChange((u) => this.handleLakeFileChanged(u, true));
-            watcher3.onDidCreate((u) => this.handleLakeFileChanged(u, true));
-            watcher3.onDidDelete((u) => this.handleLakeFileChanged(u, true));
-            this.subscriptions.push(watcher3);
-        });
+        const watcher3 = workspace.createFileSystemWatcher(`**/${this.lakeFileTomlName}`);
+        watcher3.onDidChange((u) => this.handleLakeFileChanged(u, true));
+        watcher3.onDidCreate((u) => this.handleLakeFileChanged(u, true));
+        watcher3.onDidDelete((u) => this.handleLakeFileChanged(u, true));
+        this.subscriptions.push(watcher3);
 
         window.visibleTextEditors.forEach(e => this.didOpen(e.document.uri));
         this.subscriptions.push(window.onDidChangeVisibleTextEditors(es =>
@@ -63,11 +57,7 @@ export class LeanpkgService implements Disposable {
         const fileName = path.basename(uri.fsPath);
         if (fileName === this.lakeFileLeanName || fileName === this.lakeFileTomlName){
             void this.handleLakeFileChanged(uri, false);
-        }
-        else if (fileName === 'lean-toolchain'){
-            void this.handleFileChanged(uri, false);
-        }
-        else if (fileName === 'leanpkg.toml'){
+        } else if (fileName === 'lean-toolchain'){
             void this.handleFileChanged(uri, false);
         }
     }
@@ -99,7 +89,7 @@ export class LeanpkgService implements Disposable {
     }
 
     private async handleFileChanged(uri: Uri, raiseEvent : boolean) {
-        // note: apply the same rules here with findLeanPkgVersionInfo no matter
+        // note: apply the same rules here with findLeanPackageVersionInfo no matter
         // if a file is added or removed so we always match the elan behavior.
         const [packageUri, version] = await findLeanPackageVersionInfo(uri)
         if (!packageUri || !version) {
@@ -124,14 +114,13 @@ export class LeanpkgService implements Disposable {
 
     // Return file contents with whitespace normalized.
     private async readWhitespaceNormalized(fileUri: Uri) : Promise<string> {
-        try{
+        try {
             const contents = (await workspace.fs.readFile(fileUri)).toString();
             // ignore whitespace changes by normalizing whitespace.
             const re = /[ \t\r\n]+/g
             const result = contents.replace(re, ' ');
             return result.trim();
-        }
-        catch(ex) {
+        } catch (ex) {
             // In case there is an error in the read
             return '';
         }

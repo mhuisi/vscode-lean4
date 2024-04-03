@@ -4,7 +4,7 @@ import { InfoProvider } from './infoview'
 import { DocViewProvider } from './docview'
 import { LeanTaskGutter } from './taskgutter'
 import { LeanInstaller } from './utils/leanInstaller'
-import { LeanpkgService } from './utils/leanpkg'
+import { LeanConfigWatchService } from './utils/configwatchservice'
 import { LeanClientProvider } from './utils/clientProvider'
 import { addDefaultElanPath, removeElanPath, addToolchainBinPath, isElanDisabled, getDefaultLeanVersion, getDefaultElanPath} from './config'
 import { findLeanPackageVersionInfo } from './utils/projectInfo'
@@ -135,8 +135,8 @@ async function activateLean4Features(context: ExtensionContext, installer: LeanI
     const clientProvider = new LeanClientProvider(installer, installer.getOutputChannel());
     context.subscriptions.push(clientProvider)
 
-    const pkgService = new LeanpkgService()
-    pkgService.versionChanged(async uri => {
+    const watchService = new LeanConfigWatchService()
+    watchService.versionChanged(async uri => {
         const client: LeanClient | undefined = clientProvider.getClientForFolder(uri)
         if (client && !client.isRunning()) {
             // This can naturally happen when we update the Lean version using the "Update Dependency" command
@@ -146,8 +146,8 @@ async function activateLean4Features(context: ExtensionContext, installer: LeanI
         }
         await installer.handleVersionChanged(uri)
     });
-    pkgService.lakeFileChanged((uri) => installer.handleLakeFileChanged(uri));
-    context.subscriptions.push(pkgService);
+    watchService.lakeFileChanged((uri) => installer.handleLakeFileChanged(uri));
+    context.subscriptions.push(watchService);
 
     const infoProvider = new InfoProvider(clientProvider, {language: 'lean4'}, context);
     context.subscriptions.push(infoProvider)

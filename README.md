@@ -283,7 +283,7 @@ you to install lean via elan.  If the folder contains a `lean-toolchain` version
 otherwise it will install `leanprover/lean4:stable`.
 You can override this default version by setting an `DEFAULT_LEAN_TOOLCHAIN` environment variable.
 
-Otherwise, if there is a `lean-toolchain` (or `leanpkg.toml`) in the workspace folder or in a parent
+Otherwise, if there is a `lean-toolchain` in the workspace folder or in a parent
 folder then it will use the version specified in the specified version.
 
 Then with the selected version it runs `lean --version` to check if that version is installed yet.
