@@ -5,36 +5,12 @@ import { URL } from 'url';
 import { commands, Disposable, Uri, ViewColumn, WebviewPanel, window,
      workspace, WebviewOptions, WebviewPanelOptions, TextDocument, languages,
      Range, Position } from 'vscode';
-import { join, extname } from 'path';
+import { extname } from 'path';
 import { TempFolder } from './utils/tempFolder'
 import { SymbolsByAbbreviation, AbbreviationConfig } from './abbreviation/config'
-import { fileExists } from './utils/fsHelper';
 
 export function mkCommandUri(commandName: string, ...args: any[]): string {
     return `command:${commandName}?${encodeURIComponent(JSON.stringify(args))}`;
-}
-
-function findActiveEditorRootPath(): string | undefined {
-    const doc = window.activeTextEditor?.document?.uri;
-    if (doc) {
-        return workspace.getWorkspaceFolder(doc)?.uri?.fsPath;
-    }
-    return undefined;
-}
-
-async function findProjectDocumentation(): Promise<string | null> {
-    const rootPath = findActiveEditorRootPath();
-    if (rootPath) {
-        let html = join(rootPath, 'html', 'index.html');
-        if(await fileExists(html)) {
-            return html;
-        }
-        html = join(rootPath, 'html', 'index.htm');
-        if(await fileExists(html)) {
-            return html;
-        }
-    }
-    return null;
 }
 
 function createLocalFileUrl(path: string){
@@ -217,12 +193,6 @@ export class DocViewProvider implements Disposable {
         } else {
             const $ = cheerio.load('<body>');
             const body = $('body');
-
-            const html = await findProjectDocumentation();
-            if (html) {
-                body.append($('<p>').append($('<a>').attr('href', Uri.file(html).toString())
-                    .text('Open documentation of current project')));
-            }
 
             const books : any = {
                 'Theorem Proving in Lean': mkCommandUri('lean4.docView.openUrl', 'https://lean-lang.org/theorem_proving_in_lean4/introduction.html'),

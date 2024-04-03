@@ -66,7 +66,7 @@ export class LeanConfigWatchService implements Disposable {
         // Note: just opening the file fires this event sometimes which is annoying, so
         // we compare the contents just to be sure and normalize whitespace so that
         // just adding a new line doesn't trigger the prompt.
-        const [_1, packageUri, _2] = await findLeanPackageRoot(fileUri)
+        const [packageUri, _] = await findLeanPackageRoot(fileUri)
         if (!packageUri) {
             return
         }

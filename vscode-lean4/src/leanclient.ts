@@ -46,7 +46,6 @@ export class LeanClient implements Disposable {
 	private client: LanguageClient | undefined
     private toolchainPath: string
     private outputChannel: OutputChannel;
-    private workspaceFolder: WorkspaceFolder | undefined;
     folderUri: Uri;
     private subscriptions: Disposable[] = []
     private noPrompt : boolean = false;
@@ -95,9 +94,8 @@ export class LeanClient implements Disposable {
     /** Files which are open. */
     private isOpen: Map<string, TextDocument> = new Map()
 
-    constructor(workspaceFolder: WorkspaceFolder | undefined, folderUri: Uri, outputChannel : OutputChannel, elanDefaultToolchain: string) {
-        this.outputChannel = outputChannel;
-        this.workspaceFolder = workspaceFolder; // can be null when opening adhoc files.
+    constructor(folderUri: Uri, outputChannel : OutputChannel, elanDefaultToolchain: string) {
+        this.outputChannel = outputChannel; // can be null when opening adhoc files.
         this.folderUri = folderUri;
         this.elanDefaultToolchain = elanDefaultToolchain;
         if (!this.toolchainPath) this.toolchainPath = toolchainPath();
@@ -114,7 +112,7 @@ export class LeanClient implements Disposable {
         if (this.isStarted()) void this.stop()
     }
 
-    async showRestartMessage(restartFile: boolean = false): Promise<void> {
+    async showRestartMessage(restartFile: boolean = false, uri?: Uri | undefined): Promise<void> {
         if (this.showingRestartMessage) {
             return
         }
@@ -131,8 +129,11 @@ export class LeanClient implements Disposable {
         const item = await window.showErrorMessage(messageTitle, restartItem)
         this.showingRestartMessage = false;
         if (item === restartItem) {
-            if (restartFile && window.activeTextEditor) {
-                await this.restartFile(window.activeTextEditor.document);
+            if (restartFile && uri) {
+                const document = workspace.textDocuments.find(doc => doc.uri.toString() === uri.toString())
+                if (document) {
+                    await this.restartFile(document);
+                }
             } else {
                 void this.start();
             }
@@ -310,10 +311,6 @@ export class LeanClient implements Disposable {
 
     async openLean4Document(doc: TextDocument) {
         if (this.isOpen.has(doc.uri.toString())) return;
-        if (!await this.isSameWorkspace(doc.uri)){
-            // skip it, this file belongs to a different workspace...
-            return;
-        }
 
         this.isOpen.set(doc.uri.toString(), doc)
 
@@ -338,25 +335,23 @@ export class LeanClient implements Disposable {
         });
     }
 
-    async isSameWorkspace(uri: Uri) : Promise<boolean> {
+    async isInFolderManagedByThisClient(uri: Uri) : Promise<boolean> {
         if (this.folderUri) {
             if (this.folderUri.scheme !== uri.scheme) return false;
             if (this.folderUri.scheme === 'file') {
                 const realPath1 = await fs.promises.realpath(this.folderUri.fsPath);
                 const realPath2 = await fs.promises.realpath(uri.fsPath);
                 return isFileInFolder(realPath2, realPath1);
-            }
-            else {
+            } else {
                 return uri.toString().startsWith(this.folderUri.toString());
             }
-        }
-        else {
+        } else {
             return uri.scheme === 'untitled'
         }
     }
 
-    getWorkspaceFolder() : string {
-        return this.folderUri?.toString();
+    getClientFolder() : string {
+        return this.folderUri.toString();
     }
 
     start(): Promise<void> {
@@ -405,7 +400,7 @@ export class LeanClient implements Disposable {
 
         assert(() => this.isStarted())
 
-        if (!await this.isSameWorkspace(doc.uri)){
+        if (!await this.isInFolderManagedByThisClient(doc.uri)){
             // skip it, this file belongs to a different workspace...
             return;
         }
@@ -580,10 +575,16 @@ export class LeanClient implements Disposable {
             language: 'lean4'
         }
 
-        if (this.folderUri){
+        let workspaceFolder: WorkspaceFolder | undefined
+        if (this.folderUri) {
             documentSelector.scheme = this.folderUri.scheme
             if (this.folderUri.scheme !== 'untitled') {
                 documentSelector.pattern = `${this.folderUri.fsPath}/**/*`
+                workspaceFolder = {
+                    uri: this.folderUri,
+                    name: path.basename(this.folderUri.fsPath),
+                    index: 0 // the language client library does not actually need this index
+                }
             }
         }
 
@@ -591,7 +592,7 @@ export class LeanClient implements Disposable {
             outputChannel: this.outputChannel,
             revealOutputChannelOn: RevealOutputChannelOn.Never, // contrary to the name, this disables the message boxes
             documentSelector: [documentSelector],
-            workspaceFolder: this.workspaceFolder,
+            workspaceFolder,
             initializationOptions: {
                 editDelay: getElaborationDelay(), hasWidgets: true,
             },

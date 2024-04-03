@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { URL } from 'url';
-import { Uri, workspace, WorkspaceFolder } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { fileExists } from './fsHelper';
 import { logger } from './logger'
 import path = require('path');
@@ -37,58 +37,42 @@ export async function isCoreLean4Directory(path: Uri): Promise<boolean> {
     return isCoreLean4SrcDirectory
 }
 
-// Find the root of a Lean project and return an optional WorkspaceFolder for it,
-// the Uri for the package root and the Uri for the 'lean-toolchain' file found there.
-export async function findLeanPackageRoot(uri: Uri) : Promise<[WorkspaceFolder | undefined, Uri | null, Uri | null]> {
-    if (!uri || uri.scheme !== 'file') return [undefined, null, null];
+// Find the root of a Lean project and the Uri for the 'lean-toolchain' file found there.
+export async function findLeanPackageRoot(uri: Uri) : Promise<[Uri | null, Uri | null]> {
+    if (!uri || uri.scheme !== 'file') return [null, null];
 
     const toolchainFileName = 'lean-toolchain';
 
     let path = uri;
-    let wsFolder = workspace.getWorkspaceFolder(uri);
-    if (!wsFolder && workspace.workspaceFolders) {
-        workspace.workspaceFolders.forEach((f) => {
-            if (f.uri?.scheme === 'file' && f.uri.fsPath && uri.fsPath.startsWith(f.uri.fsPath)) {
-                wsFolder = f;
-            }
-        });
-    }
-    let searchUpwards = false;
-    if (wsFolder){
-        // jump to the real workspace folder if we have a Workspace for this file.
-        path = wsFolder.uri;
-    } else {
-        // then start searching from the directory containing this document.
-        // The given uri may already be a folder Uri in some cases.
-        if (fs.lstatSync(path.fsPath).isFile()) {
-            path = Uri.joinPath(uri, '..');
-        }
-        searchUpwards = true;
+    const containingWsFolder = workspace.getWorkspaceFolder(uri)
+
+    // then start searching from the directory containing this document.
+    // The given uri may already be a folder Uri in some cases.
+    if (fs.lstatSync(path.fsPath).isFile()) {
+        path = Uri.joinPath(uri, '..');
     }
 
-    const startFolder = path;
-    // search parent folders for a lean-toolchain file.
+    let bestFolder = path
+    let bestLeanToolchain: Uri | null = null
     while (true) {
-        // give preference to 'lean-toolchain' files if any.
         const leanToolchain = Uri.joinPath(path, toolchainFileName);
         if (await fileExists(leanToolchain.fsPath)) {
-            return [wsFolder, path, leanToolchain];
-        } else if (await isCoreLean4Directory(path)) {
-            return [wsFolder, path, null];
-        } else if (searchUpwards) {
-            const parent = Uri.joinPath(path, '..');
-            if (parent === path) {
-                // no project file found.
-                break;
-            }
-            path = parent;
-        } else {
+            bestFolder = path
+            bestLeanToolchain = leanToolchain
+        }
+        if (path.toString() === containingWsFolder?.uri.toString()) {
             // don't search above a WorkspaceFolder barrier.
             break;
         }
+        const parent = Uri.joinPath(path, '..');
+        if (parent.toString() === path.toString()) {
+            // no project file found.
+            break;
+        }
+        path = parent;
     }
 
-    return [wsFolder, startFolder, null];
+    return [bestFolder, bestLeanToolchain];
 }
 
 // Find the lean project root for the given document and return the
@@ -96,7 +80,7 @@ export async function findLeanPackageRoot(uri: Uri) : Promise<[WorkspaceFolder |
 // in any 'lean-toolchain' file found there.
 export async function findLeanPackageVersionInfo(uri: Uri) : Promise<[Uri | null, string | null]> {
 
-    const [_, packageUri, packageFileUri] = await findLeanPackageRoot(uri);
+    const [packageUri, packageFileUri] = await findLeanPackageRoot(uri);
     if (!packageUri) return [null, null];
 
     let version : string | null = null;

@@ -69,7 +69,7 @@ export class InfoProvider implements Disposable {
 
     private rpcSessions: Map<string, RpcSessionAtPos> = new Map();
 
-    // the key is the LeanClient.getWorkspaceFolder()
+    // the key is the LeanClient.getClientFolder()
     private clientsFailed: Map<string, ServerStoppedReason> = new Map();
 
     // the key is the uri of the file who's worker has failed.
@@ -335,7 +335,7 @@ export class InfoProvider implements Disposable {
         }
 
         await this.webviewPanel?.api.serverStopped(undefined); // clear any server stopped state
-        const folder = client.getWorkspaceFolder()
+        const folder = client.getClientFolder()
         for (const uri of this.workersFailed.keys()){
             if (uri.startsWith(folder)){
                 this.workersFailed.delete(uri)
@@ -349,7 +349,7 @@ export class InfoProvider implements Disposable {
 
     private async onClientAdded(client: LeanClient) {
 
-        logger.log(`[InfoProvider] Adding client for workspace: ${client.getWorkspaceFolder()}`);
+        logger.log(`[InfoProvider] Adding client for workspace: ${client.getClientFolder()}`);
 
         this.clientSubscriptions.push(
             client.restarted(async () => {
@@ -408,10 +408,10 @@ export class InfoProvider implements Disposable {
             await this.webviewPanel?.api.serverStopped(reason);
         }
 
-        logger.log(`[InfoProvider] client stopped: ${client.getWorkspaceFolder()}`)
+        logger.log(`[InfoProvider] client stopped: ${client.getClientFolder()}`)
 
         // remember this client is in a stopped state
-        const key = client.getWorkspaceFolder()
+        const key = client.getClientFolder()
         if (key) {
             await this.sendPosition();
             if (!this.clientsFailed.has(key)) {
@@ -668,7 +668,7 @@ export class InfoProvider implements Disposable {
             const client = this.clientProvider.findClient(editor.document.uri.toString())
             if (client) {
                 const uri = window.activeTextEditor?.document.uri.toString() ?? '';
-                const folder = client.getWorkspaceFolder();
+                const folder = client.getClientFolder();
                 let reason : ServerStoppedReason | undefined;
                 if (this.clientsFailed.has(folder)){
                     reason = this.clientsFailed.get(folder);
