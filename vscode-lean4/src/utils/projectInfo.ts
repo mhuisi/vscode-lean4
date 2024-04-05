@@ -59,6 +59,9 @@ export async function findLeanPackageRoot(uri: Uri) : Promise<[Uri | null, Uri |
         if (await fileExists(leanToolchain.fsPath)) {
             bestFolder = path
             bestLeanToolchain = leanToolchain
+        } else if (await isCoreLean4Directory(path)) {
+            bestFolder = path
+            bestLeanToolchain = null
         }
         if (path.toString() === containingWsFolder?.uri.toString()) {
             // don't search above a WorkspaceFolder barrier.
