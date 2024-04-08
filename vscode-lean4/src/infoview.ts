@@ -21,6 +21,7 @@ import { LeanClientProvider } from './utils/clientProvider'
 import * as ls from 'vscode-languageserver-protocol'
 import { c2pConverter, p2cConverter } from './utils/converters';
 import { logger } from './utils/logger'
+import { isFileInFolder } from './utils/fsHelper';
 
 const keepAlivePeriodMs = 10000
 
@@ -336,11 +337,23 @@ export class InfoProvider implements Disposable {
 
         await this.webviewPanel?.api.serverStopped(undefined); // clear any server stopped state
         const folder = client.getClientFolder()
-        for (const uri of this.workersFailed.keys()){
-            if (uri.startsWith(folder)){
-                this.workersFailed.delete(uri)
+        const folderUri = Uri.parse(folder)
+        if (folderUri.scheme === 'file') {
+            for (const worker of this.workersFailed.keys()) {
+                const uri = Uri.parse(worker)
+                if (uri.scheme === 'file' && isFileInFolder(uri.fsPath, folder)) {
+                    this.workersFailed.delete(worker)
+                }
+            }
+        } else if (folderUri.scheme === 'untitled') {
+            for (const worker of this.workersFailed.keys()) {
+                const uri = Uri.parse(worker)
+                if (uri.scheme === 'untitled') {
+                    this.workersFailed.delete(worker)
+                }
             }
         }
+
         if (this.clientsFailed.has(folder)){
             this.clientsFailed.delete(folder);
         }

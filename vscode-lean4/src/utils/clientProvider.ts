@@ -202,10 +202,10 @@ export class LeanClientProvider implements Disposable {
     findClient(path: string) {
         const candidates = this.getClients().filter(client => isFileInFolder(path, client.getClientFolder()))
         // All candidate folders are a prefix of `path`, so they must necessarily be prefixes of one another
-        // => the best candidate (the most top-level client folder) is just the one with the shortest path
+        // => the best candidate (the closest client folder) is just the one with the longest path
         let bestCandidate: LeanClient | null = null
         for (const candidate of candidates) {
-            if (!bestCandidate || candidate.getClientFolder().length < bestCandidate.getClientFolder().length) {
+            if (!bestCandidate || candidate.getClientFolder().length > bestCandidate.getClientFolder().length) {
                 bestCandidate = candidate
             }
         }
@@ -292,6 +292,7 @@ export class LeanClientProvider implements Disposable {
             // to remember all those open files are associated with this client before
             // testLeanVersion has completed.
             client = new LeanClient(folderUri, this.outputChannel, elanDefaultToolchain);
+            await client.findLeanProjects()
             this.subscriptions.push(client);
             this.clients.set(key, client);
 

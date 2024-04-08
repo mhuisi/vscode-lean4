@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {promises, PathLike } from 'fs';
+import path = require('path');
 
 /**
     Helper used to replace fs.existsSync (using existsSync to check for the existence
@@ -16,16 +17,12 @@ export async function fileExists(pathFile: PathLike): Promise<boolean> {
 
 /**
  * This helper function is used to check if an specific file is in certain Folder.
- * it also checks some cases with Windows (windows paths are case insensitive.)
  * @param file string that contains a file name that will be checked if it exists in a certain folder.
  * @param folder string that contains a folder name where it will check if a certain file exists
  * @returns a boolean that says if the file exists in folder
  */
 export function isFileInFolder(file: string, folder: string){
-    if (process.platform === 'win32') {
-        // windows paths are case insensitive.
-        return file.toLowerCase().startsWith(folder.toLowerCase());
-    } else {
-        return file.startsWith(folder);
-    }
+    const relative = path.relative(folder, file)
+    const isSubdir = relative.length > 0 && !relative.startsWith('..') && !path.isAbsolute(relative)
+    return isSubdir
 }

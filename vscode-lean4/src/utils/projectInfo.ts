@@ -41,8 +41,6 @@ export async function isCoreLean4Directory(path: Uri): Promise<boolean> {
 export async function findLeanPackageRoot(uri: Uri) : Promise<[Uri | null, Uri | null]> {
     if (!uri || uri.scheme !== 'file') return [null, null];
 
-    const toolchainFileName = 'lean-toolchain';
-
     let path = uri;
     const containingWsFolder = workspace.getWorkspaceFolder(uri)
 
@@ -52,20 +50,24 @@ export async function findLeanPackageRoot(uri: Uri) : Promise<[Uri | null, Uri |
         path = Uri.joinPath(uri, '..');
     }
 
-    let bestFolder = path
-    let bestLeanToolchain: Uri | null = null
+    const startFolder = path
     while (true) {
-        const leanToolchain = Uri.joinPath(path, toolchainFileName);
+        const leanToolchain = Uri.joinPath(path, 'lean-toolchain');
         if (await fileExists(leanToolchain.fsPath)) {
-            bestFolder = path
-            bestLeanToolchain = leanToolchain
-        } else if (await isCoreLean4Directory(path)) {
-            bestFolder = path
-            bestLeanToolchain = null
+            const parentResult = await findParentProjectWithLakeArtifactDirectory(path)
+            if (parentResult !== undefined) {
+                // In .lake, the correct Lean client for Lean files in .lake is the surrounding parent project
+                // (since this is the context where we resolve dependencies)
+                return parentResult
+            }
+            return [path, leanToolchain]
+        }
+        if (await isCoreLean4Directory(path)) {
+            return [path, null]
         }
         if (path.toString() === containingWsFolder?.uri.toString()) {
             // don't search above a WorkspaceFolder barrier.
-            break;
+            return [path, null]
         }
         const parent = Uri.joinPath(path, '..');
         if (parent.toString() === path.toString()) {
@@ -75,7 +77,41 @@ export async function findLeanPackageRoot(uri: Uri) : Promise<[Uri | null, Uri |
         path = parent;
     }
 
-    return [bestFolder, bestLeanToolchain];
+    return [startFolder, null];
+}
+
+export async function findParentProjectWithLakeArtifactDirectory(uri: Uri): Promise<[Uri, Uri] | undefined> {
+    const parent = Uri.joinPath(uri, '..')
+    if (parent.toString() === uri.toString()) {
+        // Root of the file system
+        return undefined
+    }
+
+    const containingWsFolder = workspace.getWorkspaceFolder(uri)
+    let currentUri = parent
+
+    while (true) {
+        const dirName = path.basename(currentUri.fsPath)
+        if (dirName === '.lake' || dirName === 'build') {
+            const parent = Uri.joinPath(currentUri, '..')
+            const leanToolchain = Uri.joinPath(parent, 'lean-toolchain')
+            if (await fileExists(leanToolchain.fsPath)) {
+                return [parent, leanToolchain]
+            }
+        }
+        if (currentUri.toString() === containingWsFolder?.uri.toString()) {
+            // don't search above a WorkspaceFolder barrier.
+            return undefined
+        }
+        const parent = Uri.joinPath(currentUri, '..')
+        if (parent.toString() === currentUri.toString()) {
+            // no parent project found
+            break;
+        }
+        currentUri = parent
+    }
+
+    return undefined
 }
 
 // Find the lean project root for the given document and return the

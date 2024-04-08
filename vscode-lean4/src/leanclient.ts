@@ -1,7 +1,7 @@
 import { TextDocument, EventEmitter, Diagnostic,
     DocumentHighlight, Range, DocumentHighlightKind, workspace,
     Disposable, Uri, ConfigurationChangeEvent, OutputChannel, DiagnosticCollection,
-    WorkspaceFolder, window, ProgressLocation, ProgressOptions, Progress } from 'vscode'
+    WorkspaceFolder, window, ProgressLocation, ProgressOptions, Progress, RelativePattern } from 'vscode'
 import {
     DiagnosticSeverity,
     DidChangeTextDocumentParams,
@@ -94,6 +94,8 @@ export class LeanClient implements Disposable {
     /** Files which are open. */
     private isOpen: Map<string, TextDocument> = new Map()
 
+    private leanProjects: Set<string> = new Set()
+
     constructor(folderUri: Uri, outputChannel : OutputChannel, elanDefaultToolchain: string) {
         this.outputChannel = outputChannel; // can be null when opening adhoc files.
         this.folderUri = folderUri;
@@ -105,6 +107,18 @@ export class LeanClient implements Disposable {
                 this.staleDepNotifier.dispose()
             }
         }))
+        if (folderUri.scheme === 'file') {
+            const projectWatcher = workspace.createFileSystemWatcher(new RelativePattern(folderUri, '**/lean-toolchain'))
+            projectWatcher.onDidCreate(u => this.leanProjects.add(Uri.joinPath(u, '..').fsPath))
+            projectWatcher.onDidDelete(u => this.leanProjects.delete(Uri.joinPath(u, '..').fsPath))
+            this.subscriptions.push(projectWatcher)
+        }
+    }
+
+    async findLeanProjects() {
+        const toolchains = await workspace.findFiles(new RelativePattern(this.folderUri, '**/lean-toolchain'))
+        const projects = toolchains.map(u => Uri.joinPath(u, '..').fsPath)
+        this.leanProjects = new Set(projects)
     }
 
     dispose(): void {
@@ -336,18 +350,18 @@ export class LeanClient implements Disposable {
     }
 
     async isInFolderManagedByThisClient(uri: Uri) : Promise<boolean> {
-        if (this.folderUri) {
-            if (this.folderUri.scheme !== uri.scheme) return false;
-            if (this.folderUri.scheme === 'file') {
-                const realPath1 = await fs.promises.realpath(this.folderUri.fsPath);
-                const realPath2 = await fs.promises.realpath(uri.fsPath);
-                return isFileInFolder(realPath2, realPath1);
-            } else {
-                return uri.toString().startsWith(this.folderUri.toString());
-            }
-        } else {
-            return uri.scheme === 'untitled'
+        if (this.folderUri.scheme !== uri.scheme) {
+            return false
         }
+        if (this.folderUri.scheme === 'file') {
+            const realPath1 = await fs.promises.realpath(this.folderUri.fsPath)
+            const realPath2 = await fs.promises.realpath(uri.fsPath)
+            return isFileInFolder(realPath2, realPath1)
+        }
+        if (this.folderUri.scheme === 'untitled') {
+            return true
+        }
+        return false
     }
 
     getClientFolder() : string {
@@ -693,5 +707,12 @@ export class LeanClient implements Disposable {
 
         patchConverters(client.protocol2CodeConverter, client.code2ProtocolConverter)
         return client
+    }
+
+    private isInProjectFolder(uri: Uri): boolean {
+        for (const projectUri in this.leanProjects) {
+
+        }
+        return true
     }
 }
