@@ -215,3 +215,34 @@ export function Widget_getWidgetSource(rs: RpcSessionAtPos, pos: Position, hash:
     }
     return rs.call<GetWidgetSourceParams, WidgetSource>('Lean.Widget.getWidgetSource', { pos, hash })
 }
+
+export interface HighlightedTraceEmbed {
+    indent: number
+    cls: Name
+    msg: TaggedText<HighlightedMsgEmbed>
+    collapsed: boolean // collapsed by default
+    children: StrictOrLazy<TaggedText<HighlightedMsgEmbed>[], LazyTraceChildren>
+}
+
+export type HighlightedMsgEmbed =
+    | { expr: CodeWithInfos }
+    | { goal: InteractiveGoal }
+    | { widget: { wi: UserWidgetInstance; alt: TaggedText<HighlightedMsgEmbed> } }
+    | { trace: HighlightedTraceEmbed }
+    | 'highlighted'
+
+interface HighlightMatchesParams {
+    query: string
+    msg: TaggedText<MsgEmbed>
+}
+
+export function highlightMatches(
+    rs: RpcSessionAtPos,
+    query: string,
+    msg: TaggedText<MsgEmbed>,
+): Promise<TaggedText<HighlightedMsgEmbed>> {
+    return rs.call<HighlightMatchesParams, TaggedText<HighlightedMsgEmbed>>('Lean.Widget.highlightMatches', {
+        query,
+        msg,
+    })
+}

@@ -249,6 +249,11 @@ select {
     border-radius: 2pt;
 }
 
+.highlighted-text {
+    background-color: var(--vscode-editor-findMatchBackground);
+    border-radius: 2pt;
+}
+
 .b--inserted {
     border-color: var(--vscode-diffEditor-insertedTextBackground) !important;
 }

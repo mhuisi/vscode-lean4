@@ -2,12 +2,20 @@ import * as React from 'react'
 import fastIsEqual from 'react-fast-compare'
 import { Diagnostic, DiagnosticSeverity, DocumentUri, Location, Position, Range } from 'vscode-languageserver-protocol'
 
-import { LeanDiagnostic, LeanPublishDiagnosticsParams, MessageOrder, RpcErrorCode } from '@leanprover/infoview-api'
+import {
+    highlightMatches,
+    LeanDiagnostic,
+    LeanPublishDiagnosticsParams,
+    MessageOrder,
+    MsgEmbed,
+    RpcErrorCode,
+    TaggedText,
+} from '@leanprover/infoview-api'
 
 import { getInteractiveDiagnostics, InteractiveDiagnostic } from '@leanprover/infoview-api'
 import { Details } from './collapsing'
 import { ConfigContext, EditorContext, EnvPosContext, LspDiagnosticsContext } from './contexts'
-import { RpcContext, useRpcSessionAtPos } from './rpcSessions'
+import { RpcContext, useRpcSession, useRpcSessionAtPos } from './rpcSessions'
 import { InteractiveMessage } from './traceExplorer'
 import {
     addUniqueKeys,
@@ -16,6 +24,7 @@ import {
     escapeHtml,
     Keyed,
     PositionHelpers,
+    useAsyncWithTrigger,
     useEvent,
     useEventResult,
     usePausableState,
@@ -27,7 +36,19 @@ interface MessageViewProps {
     diag: InteractiveDiagnostic
 }
 
+function isTraceMessage(message: TaggedText<MsgEmbed>): boolean {
+    if (!('tag' in message)) {
+        return false
+    }
+    const embed = message.tag[0]
+    if (!('trace' in embed)) {
+        return false
+    }
+    return true
+}
+
 const MessageView = React.memo(({ uri, diag }: MessageViewProps) => {
+    const rs = useRpcSession()
     const ec = React.useContext(EditorContext)
     const fname = escapeHtml(basename(uri))
     const { line, character } = diag.range.start
@@ -66,6 +87,17 @@ const MessageView = React.memo(({ uri, diag }: MessageViewProps) => {
         `copyMessage:${messageId}`,
     )
 
+    const [traceSearchMessage, setTraceSearchMessage] = React.useState('')
+
+    const [highlightedMsg, search] = useAsyncWithTrigger(async () => {
+        if (traceSearchMessage === '') {
+            // TODO: this resets the collapse state, which we might not want.
+            return diag.message
+        }
+        return await highlightMatches(rs, traceSearchMessage, diag.message)
+    }, [])
+    const msg = highlightedMsg.state === 'resolved' ? highlightedMsg.value : diag.message
+
     return (
         <Details
             initiallyOpen
@@ -81,12 +113,28 @@ const MessageView = React.memo(({ uri, diag }: MessageViewProps) => {
                         }}
                         title="Go to source location of message"
                     ></a>
+                    {isTraceMessage(msg) && (
+                        <>
+                            <input
+                                name="traceSearch"
+                                value={traceSearchMessage}
+                                onChange={e => setTraceSearchMessage(e.target.value)}
+                            ></input>
+                            <a
+                                className="link pointer mh2 dim codicon codicon-search"
+                                title="Search"
+                                onClick={_ => {
+                                    void search()
+                                }}
+                            ></a>
+                        </>
+                    )}
                 </span>
             </span>
             <div className="ml1" ref={node}>
                 <pre className="font-code pre-wrap">
                     <EnvPosContext.Provider value={startPos}>
-                        <InteractiveMessage fmt={diag.message} />
+                        <InteractiveMessage fmt={msg} />
                     </EnvPosContext.Provider>
                 </pre>
             </div>

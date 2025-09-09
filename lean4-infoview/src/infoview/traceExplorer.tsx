@@ -7,7 +7,7 @@
  * @module
  */
 
-import { lazyTraceChildrenToInteractive, MsgEmbed, TraceEmbed } from '@leanprover/infoview-api'
+import { HighlightedMsgEmbed, HighlightedTraceEmbed, lazyTraceChildrenToInteractive } from '@leanprover/infoview-api'
 import * as React from 'react'
 import { Goal } from './goals'
 import {
@@ -30,7 +30,8 @@ function abbreviateCommonPrefix(parent: string, cls: string): string {
     return clsParts.slice(i).join('.')
 }
 
-function TraceLine({ indent, cls, msg, icon }: TraceEmbed & { icon: string }) {
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+function TraceLine({ indent, cls, msg, icon }: HighlightedTraceEmbed & { icon: string }) {
     const spaces = ' '.repeat(indent)
     const abbrCls = abbreviateCommonPrefix(React.useContext(TraceClassContext), cls)
     return (
@@ -44,11 +45,11 @@ function TraceLine({ indent, cls, msg, icon }: TraceEmbed & { icon: string }) {
     )
 }
 
-function ChildlessTraceNode(traceEmbed: TraceEmbed) {
+function ChildlessTraceNode(traceEmbed: HighlightedTraceEmbed) {
     return <TraceLine {...traceEmbed} icon="" />
 }
 
-function CollapsibleTraceNode(traceEmbed: TraceEmbed) {
+function CollapsibleTraceNode(traceEmbed: HighlightedTraceEmbed) {
     const { cls, collapsed: collapsedByDefault, children: lazyKids } = traceEmbed
 
     const rs = useRpcSession()
@@ -99,12 +100,15 @@ function CollapsibleTraceNode(traceEmbed: TraceEmbed) {
     )
 }
 
-function Trace(traceEmbed: TraceEmbed) {
+function Trace(traceEmbed: HighlightedTraceEmbed) {
     const noChildren = 'strict' in traceEmbed.children && traceEmbed.children.strict.length === 0
     return noChildren ? <ChildlessTraceNode {...traceEmbed} /> : <CollapsibleTraceNode {...traceEmbed} />
 }
 
-function InteractiveMessageTag({ tag: embed }: InteractiveTagProps<MsgEmbed>): JSX.Element {
+function InteractiveMessageTag({ tag: embed }: InteractiveTagProps<HighlightedMsgEmbed>): JSX.Element {
+    if (embed === 'highlighted') {
+        return <span className="highlighted-text"></span>
+    }
     if ('expr' in embed) return <InteractiveCode fmt={embed.expr} />
     else if ('goal' in embed)
         return (
@@ -128,6 +132,6 @@ function InteractiveMessageTag({ tag: embed }: InteractiveTagProps<MsgEmbed>): J
     else return <div>malformed MsgEmbed: {JSON.stringify(embed)}</div>
 }
 
-export function InteractiveMessage({ fmt }: InteractiveTextComponentProps<MsgEmbed>) {
+export function InteractiveMessage({ fmt }: InteractiveTextComponentProps<HighlightedMsgEmbed>) {
     return InteractiveTaggedText({ fmt, InnerTagUi: InteractiveMessageTag })
 }
