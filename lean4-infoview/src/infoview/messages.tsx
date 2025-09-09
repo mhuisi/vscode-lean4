@@ -3,11 +3,11 @@ import fastIsEqual from 'react-fast-compare'
 import { Diagnostic, DiagnosticSeverity, DocumentUri, Location, Position, Range } from 'vscode-languageserver-protocol'
 
 import {
+    HighlightedMsgEmbed,
     highlightMatches,
     LeanDiagnostic,
     LeanPublishDiagnosticsParams,
     MessageOrder,
-    MsgEmbed,
     RpcErrorCode,
     TaggedText,
 } from '@leanprover/infoview-api'
@@ -36,12 +36,12 @@ interface MessageViewProps {
     diag: InteractiveDiagnostic
 }
 
-function isTraceMessage(message: TaggedText<MsgEmbed>): boolean {
+function isTraceMessage(message: TaggedText<HighlightedMsgEmbed>): boolean {
     if (!('tag' in message)) {
         return false
     }
     const embed = message.tag[0]
-    if (!('trace' in embed)) {
+    if (embed === 'highlighted' || !('trace' in embed)) {
         return false
     }
     return true
@@ -87,17 +87,19 @@ const MessageView = React.memo(({ uri, diag }: MessageViewProps) => {
         `copyMessage:${messageId}`,
     )
 
+    const [msg, setMsg] = React.useState<TaggedText<HighlightedMsgEmbed>>(diag.message)
     const [traceSearchMessage, setTraceSearchMessage] = React.useState('')
 
-    const [highlightedMsg, search] = useAsyncWithTrigger(async () => {
+    const [searchState, search] = useAsyncWithTrigger(async () => {
         if (traceSearchMessage === '') {
             // TODO: this resets the collapse state, which we might not want.
-            return diag.message
+            setMsg(diag.message)
         }
-        return await highlightMatches(rs, traceSearchMessage, diag.message)
+        console.log(traceSearchMessage)
+        const r = await highlightMatches(rs, traceSearchMessage, diag.message)
+        console.log(r)
+        setMsg(r)
     }, [])
-    const msg = highlightedMsg.state === 'resolved' ? highlightedMsg.value : diag.message
-
     return (
         <Details
             initiallyOpen
