@@ -828,8 +828,10 @@ export class LeanClient implements Disposable {
         let workspaceFolder: WorkspaceFolder | undefined
         documentSelector.scheme = this.folderUri.scheme
         if (this.folderUri.scheme === 'file') {
-            const escapedPath = this.folderUri.fsPath.replace(/[?*()[\]{}]/g, '[$&]')
-            documentSelector.pattern = `${escapedPath}/**/*`
+            // `DocumentFilter.pattern` is typed as `string` per the LSP spec, but vscode-languageclient
+            // passes it to VS Code's APIs at runtime, which accept `GlobPattern` (including `RelativePattern`).
+            // Using `RelativePattern` fixes matching for file paths containing glob metacharacters like `{`.
+            documentSelector.pattern = new RelativePattern(this.folderUri.asUri(), '**/*') as unknown as string
             workspaceFolder = {
                 uri: this.folderUri.asUri(),
                 name: this.folderUri.baseName(),
