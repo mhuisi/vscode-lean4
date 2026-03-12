@@ -22,7 +22,7 @@ import { ExtUri, extUriToCwdUri, FileUri, toExtUri } from './utils/exturi'
 import { FullInstaller } from './utils/fullInstaller'
 import { displayInternalErrorsIn } from './utils/internalErrors'
 import { registerLeanCommandRunner } from './utils/leanCmdRunner'
-import { lean, registerLeanEditorProviders, text } from './utils/leanEditorProvider'
+import { isLeanDocument, lean, registerLeanEditorProviders, text } from './utils/leanEditorProvider'
 import { LeanInstaller } from './utils/leanInstaller'
 import { ModuleTreeViewProvider } from './utils/moduleTreeViewProvider'
 import {
@@ -34,6 +34,7 @@ import {
 import { PathExtensionProvider } from './utils/pathExtensionProvider'
 import { findLeanProjectRootInfo } from './utils/projectInfo'
 import { UriHandlerService } from './utils/uriHandlerService'
+import { batchExecute } from './utils/batch'
 
 async function setLeanFeatureSetActive(isActive: boolean) {
     await commands.executeCommand('setContext', 'lean4.isLeanFeatureSetActive', isActive)
@@ -48,7 +49,7 @@ async function findInitialLeanProjectUri(editor: TextEditor): Promise<ExtUri | u
     if (info.kind === 'FileNotFound') {
         return undefined
     }
-    if (editor.document.languageId !== 'lean4' && info.kind === 'Success' && info.toolchainUri === undefined) {
+    if (!isLeanDocument(editor.document) && info.kind === 'Success' && info.toolchainUri === undefined) {
         return undefined
     }
     return info.projectRootUri
@@ -162,7 +163,10 @@ function activateAlwaysEnabledFeatures(context: ExtensionContext): AlwaysEnabled
 
     const outputChannel = window.createOutputChannel('Lean: Editor')
     context.subscriptions.push(
-        commands.registerCommand('lean4.troubleshooting.showOutput', () => outputChannel.show(true)),
+        commands.registerCommand('lean4.troubleshooting.showOutput', async () => {
+            await batchExecute('helloworld', [], undefined, { combined: outputChannel })
+            outputChannel.show(true)
+        }),
     )
 
     const depInstaller = new DepInstaller(outputChannel)
@@ -179,7 +183,7 @@ function activateAlwaysEnabledFeatures(context: ExtensionContext): AlwaysEnabled
 
     const checkForExtensionConflict = (doc: TextDocument) => {
         const isLean3ExtensionInstalled = extensions.getExtension('jroesch.lean') !== undefined
-        if (isLean3ExtensionInstalled && (doc.languageId === 'lean' || doc.languageId === 'lean4')) {
+        if (isLean3ExtensionInstalled && isLeanDocument(doc)) {
             displayNotification(
                 'Error',
                 "The Lean 3 and the Lean 4 VS Code extension are enabled at the same time. Since both extensions act on .lean files, this can lead to issues with either extension. Please disable the extension for the Lean major version that you do not wish to use ('Extensions' in the left sidebar > Cog icon > 'Disable').",
@@ -316,14 +320,14 @@ async function tryActivatingLean4Features(
         )
     }
     // We try activating the Lean features in two cases:
-    // 1. When revealing a new editor with the `lean4` language ID (e.g.: switching tabs, opening a new Lean document, changing the language ID to `lean4`)
-    // 2. When revealing a new editor in a Lean project that doesn't have the `lean4` language ID (e.g.: switching tabs, opening a new document)
+    // 1. When revealing a new editor with the `lean` or `lean4` language ID (e.g.: switching tabs, opening a new Lean document, changing the language ID to `lean` or `lean4`)
+    // 2. When revealing a new editor in a Lean project that doesn't have the `lean` or `lean4` language ID (e.g.: switching tabs, opening a new document)
     // These two events are disjoint, so combining them won't cause duplicate triggers.
     const combinedEvent = combine(
         lean.onDidRevealLeanEditor,
         _ => true,
         text.onDidRevealLeanEditor,
-        editor => editor.editor.document.languageId !== 'lean4',
+        editor => !isLeanDocument(editor.editor.document),
     )
     context.subscriptions.push(combinedEvent.disposable)
     context.subscriptions.push(

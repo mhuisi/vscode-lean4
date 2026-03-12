@@ -47,7 +47,8 @@
                 "lean4.input.languages": {
                     "type": "array",
                     "default": [
-                        "lean4"
+                        "lean4",
+                        "lean"
                     ],
                     "markdownDescription": "Enable Lean Unicode input in other file types.",
                     "items": {

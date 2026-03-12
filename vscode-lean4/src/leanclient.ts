@@ -840,7 +840,7 @@ export class LeanClient implements Disposable {
         return {
             outputChannel: this.outputChannel,
             revealOutputChannelOn: RevealOutputChannelOn.Never, // contrary to the name, this disables the message boxes
-            documentSelector: [documentSelector],
+            documentSelector: [documentSelector, { ...documentSelector, language: 'lean' }],
             workspaceFolder,
             initializationOptions: {
                 hasWidgets: true,

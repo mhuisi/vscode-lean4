@@ -14,6 +14,10 @@ import {
 import { ExtUri, isExtUri, toExtUriOrError } from './exturi'
 import { groupByKey, groupByUniqueKey } from './groupBy'
 
+export function isLeanDocument(doc: TextDocument): boolean {
+    return isExtUri(doc.uri) && (doc.languageId === 'lean4' || doc.languageId === 'lean')
+}
+
 export class LeanDocument {
     constructor(
         readonly doc: TextDocument,
@@ -329,7 +333,7 @@ export class LeanEditorProvider implements Disposable {
     private isLeanDocument(doc: TextDocument): boolean {
         switch (this.mode) {
             case 'Lean':
-                return isExtUri(doc.uri) && doc.languageId === 'lean4'
+                return isLeanDocument(doc)
             case 'Text':
                 return isExtUri(doc.uri)
         }

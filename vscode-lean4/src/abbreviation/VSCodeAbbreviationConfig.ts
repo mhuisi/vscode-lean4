@@ -24,7 +24,7 @@ export class VSCodeAbbreviationConfig implements AbbreviationConfig, Disposable 
     private reloadConfig() {
         this.inputModeEnabled = workspace.getConfiguration('lean4.input').get('enabled', true)
         this.abbreviationCharacter = workspace.getConfiguration('lean4.input').get('leader', '\\')
-        this.languages = workspace.getConfiguration('lean4.input').get('languages', ['lean4'])
+        this.languages = workspace.getConfiguration('lean4.input').get('languages', ['lean4', 'lean'])
         this.customTranslations = workspace.getConfiguration('lean4.input').get('customTranslations', {})
         this.eagerReplacementEnabled = workspace.getConfiguration('lean4.input').get('eagerReplacementEnabled', true)
     }
