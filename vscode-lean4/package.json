@@ -791,8 +791,8 @@
                     ".lean"
                 ],
                 "icon": {
-                    "dark": "./media/lean-file-icon-dark.png",
-                    "light": "./media/lean-file-icon-light.png"
+                    "dark": "./media/lean-file-icon-light.png",
+                    "light": "./media/lean-file-icon-dark.png"
                 }
             },
             {
