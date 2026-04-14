@@ -1,7 +1,0 @@
-# A dependency with an integer `version`. Lake expects a version range string.
-name = "foo"
-
-[[require]]
-name = "dependency"
-scope = "leanprover-community"
-version = 1

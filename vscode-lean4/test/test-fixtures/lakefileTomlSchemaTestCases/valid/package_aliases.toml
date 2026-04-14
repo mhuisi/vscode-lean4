@@ -1,5 +1,0 @@
-# `testRunner` and `moreServerArgs` are old names that Lake still accepts.
-# The schema does not list them, but it must not reject them.
-name = "foo"
-testRunner = "FooTest"
-moreServerArgs = ["-DmaxHeartbeats=0"]

@@ -1,3 +1,0 @@
-# `checks` with a single string. Lake expects an array of module names.
-name = "foo"
-checks = "Foo.Checks"

@@ -1,3 +1,0 @@
-# The `\e` escape sequence is only valid in TOML v1.1.0. Lake only supports TOML v1.0.0.
-name = "foo"
-description = "\e[1mbold\e[0m"

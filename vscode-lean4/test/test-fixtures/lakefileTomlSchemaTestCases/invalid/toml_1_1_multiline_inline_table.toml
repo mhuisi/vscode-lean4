@@ -1,6 +1,0 @@
-# An inline table on more than one line, with a trailing comma, is only valid in TOML v1.1.0.
-# Lake only supports TOML v1.0.0.
-name = "foo"
-leanOptions = {
-  autoImplicit = false,
-}

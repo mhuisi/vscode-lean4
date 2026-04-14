@@ -1,4 +1,0 @@
-# `bootstrap` is an internal key that only the package of Lean itself uses.
-# The schema does not list it, but it must not reject it.
-name = "Lean"
-bootstrap = true

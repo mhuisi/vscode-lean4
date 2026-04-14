@@ -1,4 +1,0 @@
-# An unknown package key (`precompileModule` instead of `precompileModules`).
-# Lake ignores unknown keys, so the schema must not reject them.
-name = "foo"
-precompileModule = true

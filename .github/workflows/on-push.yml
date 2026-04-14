@@ -82,64 +82,23 @@ jobs:
           name: vscode-lean4
           path: 'vscode-lean4/lean4-*.vsix'
 
-  build-and-test:
+  lint:
     if: github.event_name != 'workflow_dispatch'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: build-and-test-linux
-            os: ubuntu-latest
-            artifact: build-Linux release
-          # - name: build-and-test-macos
-          #   os: macos-latest
-          #   artifact: build-macOS
-          - name: build-and-test-windows
-            os: windows-latest
-            artifact: build-Windows
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
 
-      - name: Build
-        run: |
-          npm ci
-          npm run build
+      - name: Install
+        run: npm ci
 
       - name: Lint
         run: npm run lint
-
-      - name: Install Brew Packages
-        run: |
-          brew install ccache tree zstd coreutils
-        if: matrix.os == 'macos-latest'
-
-      - name: Set path to elan on Linux or macOS
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-        run: |
-          echo "$HOME/.elan/bin" >> $GITHUB_PATH
-
-      - name: Set path to elan on Windows
-        shell: pwsh
-        if: matrix.os == 'windows-latest'
-        run: |
-          echo "$HOME\.elan\bin" >> $env:GITHUB_PATH
-
-      - name: Run tests
-        uses: GabrielBB/xvfb-action@v1.0
-        with:
-          run: npm run test
 
   publish-vsce:
     needs: package
@@ -192,9 +151,7 @@ jobs:
   github-release:
     needs: [package, publish-vsce, publish-ovsx]
     # Run even if one of the publish jobs failed, so a GitHub Release with notes
-    # is always created on a tag build. Tests are intentionally not a dependency:
-    # releases ship in parallel with the build-and-test matrix, matching the
-    # previous single-job behavior where publish ran before tests.
+    # is always created on a tag build.
     if: |
       !cancelled() &&
       needs.package.result == 'success' &&

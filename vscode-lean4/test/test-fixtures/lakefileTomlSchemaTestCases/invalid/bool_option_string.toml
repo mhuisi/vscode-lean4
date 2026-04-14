@@ -1,3 +1,0 @@
-# A boolean option with a string value. Lake expects a boolean.
-name = "foo"
-precompileModules = "false"

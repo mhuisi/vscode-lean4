@@ -8,7 +8,6 @@
     },
     "scripts": {
         "watch": "tsc --watch",
-        "watchTest": "tsc --watch",
         "build": "tsc --sourceMap false",
         "build:dev": "tsc"
     },

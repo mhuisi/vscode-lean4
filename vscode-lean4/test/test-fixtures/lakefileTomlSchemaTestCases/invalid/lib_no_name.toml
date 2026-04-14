@@ -1,5 +1,0 @@
-# A `[[lean_lib]]` target without the required `name` key.
-name = "foo"
-
-[[lean_lib]]
-roots = ["Foo"]

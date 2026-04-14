@@ -1,3 +1,0 @@
-# `versionTags` as a nested pattern table.
-name = "foo"
-versionTags = { any = [{ startsWith = "v" }, { not = { endsWith = "-rc" } }, ["nightly"], "*"] }

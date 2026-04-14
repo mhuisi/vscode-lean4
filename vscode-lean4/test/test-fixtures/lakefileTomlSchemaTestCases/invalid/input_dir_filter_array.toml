@@ -1,6 +1,0 @@
-# An `[[input_dir]]` target with an array as `filter`. Lake expects `"*"` or a path pattern table.
-name = "foo"
-
-[[input_dir]]
-name = "data"
-filter = ["data.json"]

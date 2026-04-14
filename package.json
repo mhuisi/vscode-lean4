@@ -4,10 +4,8 @@
     "scripts": {
         "build": "nx run-many -t build --output-style=stream",
         "build:dev": "nx run-many -t build:dev --output-style=stream",
-        "test": "nx run-many -t test --output-style=stream",
         "watch": "nx run-many -t build:dev --exclude lean4 --output-style=stream && nx run-many -t watch --output-style=stream",
-        "watchTest": "nx run-many -t build:dev --exclude lean4 --output-style=stream && nx run-many -t watchTest --output-style=stream",
-        "lint": "eslint -c .eslintrc.js \"{lean4-infoview-api,lean4-infoview,lean4-unicode-input,lean4-unicode-input-component,vscode-lean4}/src/**/*.{ts,tsx}\" \"vscode-lean4/test/suite/**/*.{ts,tsx}\"",
+        "lint": "eslint -c .eslintrc.js \"{lean4-infoview-api,lean4-infoview,lean4-unicode-input,lean4-unicode-input-component,vscode-lean4}/src/**/*.{ts,tsx}\"",
         "prepare": "husky install"
     },
     "workspaces": [

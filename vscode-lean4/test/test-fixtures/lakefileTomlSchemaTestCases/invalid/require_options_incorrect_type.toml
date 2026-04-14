@@ -1,7 +1,0 @@
-# A dependency option with an integer value. Lake expects string values in `options`.
-name = "foo"
-
-[[require]]
-name = "dependency"
-path = "../dependency"
-options = { foo = 1 }

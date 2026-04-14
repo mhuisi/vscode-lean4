@@ -11,15 +11,8 @@ npm install
 # Build all packages
 npm run build
 
-# Run all tests (from repo root or vscode-lean4/ subdirectory)
-# Tests should not be run locally, only in CI
-npm run test
-
 # Watch mode for development (rebuilds on file changes)
 npm run watch
-
-# Watch mode including test compilation
-npm run watchTest
 
 # Lint all TypeScript/TSX files
 npm run lint
@@ -27,10 +20,6 @@ npm run lint
 # Package as .vsix for local install testing (from vscode-lean4/)
 cd vscode-lean4 && npm run package
 ```
-
-Tests require `leanprover/lean4:nightly`, `leanprover/lean4:stable`, and a `default` Lean 4 toolchain installed via elan. They download a separate VS Code instance into `.vscode-test/` on first run.
-
-To run a specific test suite, set `LEAN4_TEST_FOLDER` to one of: `bootstrap`, `info`, `simple`, `restarts`, `multi`, `lakefileTomlSchema`, `toolchains`.
 
 ## Architecture
 

@@ -1,8 +1,0 @@
-# A Reservoir dependency with a Git revision as `version`, and with `options`.
-name = "foo"
-
-[[require]]
-name = "batteries"
-scope = "leanprover-community"
-version = "git#v4.20.0"
-options = { foo = "bar" }

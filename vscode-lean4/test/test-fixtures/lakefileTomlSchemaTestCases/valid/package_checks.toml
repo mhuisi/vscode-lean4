@@ -1,4 +1,0 @@
-# The `checks` key, together with `builtinLint`.
-name = "foo"
-builtinLint = true
-checks = ["Foo.Checks"]

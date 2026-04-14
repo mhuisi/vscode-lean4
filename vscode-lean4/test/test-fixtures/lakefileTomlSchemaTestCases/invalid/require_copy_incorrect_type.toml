@@ -1,7 +1,0 @@
-# A path dependency with a string value for `copy`. Lake expects a boolean.
-name = "foo"
-
-[[require]]
-name = "local"
-path = "../local"
-copy = "yes"

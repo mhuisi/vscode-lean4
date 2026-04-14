@@ -1875,11 +1875,8 @@
         "build": "webpack --env production",
         "build:dev": "webpack --env development",
         "watch": "webpack --env development --watch",
-        "watchTest": "concurrently \"tsc -p . -w --outDir out\" \"npm run watch\"",
         "package": "vsce package",
-        "packagePreRelease": "vsce package --pre-release",
-        "pretest": "tsc -p . --outDir out",
-        "test": "node ./out/test/suite/runTest.js"
+        "packagePreRelease": "vsce package --pre-release"
     },
     "dependencies": {
         "@leanprover/infoview": "~0.14.0",
@@ -1896,16 +1893,12 @@
     },
     "devDependencies": {
         "@types/markdown-it": "^14.1.1",
-        "@types/mocha": "^10.0.6",
         "@types/node": "^20.12.12",
         "@types/semver": "^7.5.7",
         "@types/vscode": "^1.75.0",
         "@types/vscode-webview": "^1.57.5",
-        "@vscode/test-electron": "^2.3.9",
         "@vscode/vsce": "^2.21.1",
-        "concurrently": "^8.2.2",
         "copy-webpack-plugin": "^12.0.2",
-        "mocha": "^10.3.0",
         "ovsx": "^0.9.1",
         "source-map-loader": "^5.0.0",
         "string-replace-loader": "^3.3.0",

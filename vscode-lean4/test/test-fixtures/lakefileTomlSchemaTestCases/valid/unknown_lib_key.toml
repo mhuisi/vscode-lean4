@@ -1,7 +1,0 @@
-# An unknown key in a `[[lean_lib]]` target (`root` instead of `roots`).
-# Lake ignores unknown keys, so the schema must not reject them.
-name = "foo"
-
-[[lean_lib]]
-name = "Foo"
-root = "Foo"

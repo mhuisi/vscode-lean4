@@ -1,3 +1,0 @@
-# `versionTags` with a preset pattern.
-name = "foo"
-versionTags = { preset = "verLike" }

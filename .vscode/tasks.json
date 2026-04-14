@@ -39,41 +39,6 @@
             "group": "build"
         },
         {
-            "label": "watchTest",
-            "type": "npm",
-            "script": "watchTest",
-            "problemMatcher": {
-                "owner": "typescript",
-                "source": "ts",
-                "fileLocation": "absolute",
-                "applyTo": "closedDocuments",
-                "pattern": [
-                    {
-                        "regexp": "\\[tsl\\] (ERROR|WARNING) in (.*)?\\((\\d+),(\\d+)\\)",
-                        "severity": 1,
-                        "file": 2,
-                        "line": 3,
-                        "column": 4
-                    },
-                    {
-                        "regexp": "\\s*TS(\\d+):\\s*(.*)$",
-                        "code": 1,
-                        "message": 2
-                    }
-                ],
-                "background": {
-                    "activeOnStart": true,
-                    "beginsPattern": "^extension:",
-                    "endsPattern": "webpack .* compiled .* in "
-                }
-            },
-            "isBackground": true,
-            "presentation": {
-                "reveal": "never"
-            },
-            "group": "build"
-        },
-        {
             "label": "build",
             "type": "npm",
             "script": "build:dev",
