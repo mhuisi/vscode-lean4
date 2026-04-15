@@ -1,0 +1,12 @@
+# Reservoir dependencies with version ranges as `version`.
+name = "foo"
+
+[[require]]
+name = "a"
+scope = "leanprover-community"
+version = ">=1.2.0"
+
+[[require]]
+name = "b"
+scope = "leanprover-community"
+version = "^1.0 || ^2.0"

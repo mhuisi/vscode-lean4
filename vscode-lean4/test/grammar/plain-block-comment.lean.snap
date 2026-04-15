@@ -1,0 +1,167 @@
+>-- Pins the tokenization of plain (non-doc) block comments `/- ... -/`
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                                           ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                            ^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                                                     ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+>-- across single-line, multi-line, and nested forms. The doc variants
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- (`/-- ... -/`, `/-! ... -/`) are covered by `block-comment-markdown.lean`
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^ source.lean4 comment.line.double-dash.lean4
+#    ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#     ^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#               ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                ^^ source.lean4 comment.line.double-dash.lean4
+#                  ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                   ^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                             ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                              ^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                               ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                                                           ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+>-- and `block-comment-html.lean`; this fixture locks the plain variant so
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^ source.lean4 comment.line.double-dash.lean4
+#       ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#        ^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                               ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- a future grammar change that conflates the scopes (e.g. the outer
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- comment scope drifting from `comment.block.lean4` to
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                               ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                ^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                                   ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                    ^^^ source.lean4 comment.line.double-dash.lean4
+>-- `comment.block.documentation.lean4`) is caught.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^ source.lean4 comment.line.double-dash.lean4
+#   ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                     ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                      ^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>--
+#^^ source.lean4 comment.line.double-dash.lean4
+>-- Note: markdown IS parsed inside plain `/- ... -/` blocks too — the
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                         ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                          ^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                                   ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                    ^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- markdown sub-grammar is included for ALL Lean comment kinds, not just
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- the doc variants. So bold / inline-code spans below tokenize with their
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- markdown scopes nested under `comment.block.lean4`. The snapshot pins
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                 ^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                                    ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                     ^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- both the outer `.lean4` (not `.documentation.lean4`) scope and the
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                  ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                   ^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                         ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                          ^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                 ^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                                     ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                      ^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- inner markdown scopes.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>
+>/- single-line plain block comment -/
+#^^ source.lean4 comment.block.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.lean4
+#                                   ^^ source.lean4 comment.block.lean4
+>def afterSingleLinePlainBlock : Nat := 0
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                             ^ source.lean4 meta.definitioncommand.lean4
+#                              ^^^^^^^^^ source.lean4
+#                                       ^ source.lean4 constant.numeric.lean4
+>
+>/- multi
+#^^ source.lean4 comment.block.lean4
+#  ^^^^^^^ source.lean4 comment.block.lean4
+>   line
+#^^^^^^^^ source.lean4 comment.block.lean4
+>   plain
+#^^^^^^^^^ source.lean4 comment.block.lean4
+>   block
+#^^^^^^^^^ source.lean4 comment.block.lean4
+>   comment -/
+#^^^^^^^^^^^ source.lean4 comment.block.lean4
+#           ^^ source.lean4 comment.block.lean4
+>def afterMultiLinePlainBlock : Nat := 1
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                            ^ source.lean4 meta.definitioncommand.lean4
+#                             ^^^^^^^^^ source.lean4
+#                                      ^ source.lean4 constant.numeric.lean4
+>
+>/- outer
+#^^ source.lean4 comment.block.lean4
+#  ^^^^^^^ source.lean4 comment.block.lean4
+>   /- nested -/
+#^^^ source.lean4 comment.block.lean4
+#   ^^ source.lean4 comment.block.lean4 comment.block.lean4
+#     ^^^^^^^^ source.lean4 comment.block.lean4 comment.block.lean4
+#             ^^ source.lean4 comment.block.lean4 comment.block.lean4
+>   still inside outer
+#^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.lean4
+>-/
+#^^ source.lean4 comment.block.lean4
+>def afterNestedPlainBlock : Nat := 2
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                         ^ source.lean4 meta.definitioncommand.lean4
+#                          ^^^^^^^^^ source.lean4
+#                                   ^ source.lean4 constant.numeric.lean4
+>
+>/- markdown markup like **bold** and `code` is parsed inside `/- ... -/`
+#^^ source.lean4 comment.block.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.lean4
+#                        ^^ source.lean4 comment.block.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#                          ^^^^ source.lean4 comment.block.lean4 markup.bold.markdown
+#                              ^^ source.lean4 comment.block.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#                                ^^^^^ source.lean4 comment.block.lean4
+#                                     ^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                      ^^^^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown
+#                                          ^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                           ^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.lean4
+#                                                             ^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                              ^^^^^^^^^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown
+#                                                                       ^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+>   too (markdown sub-grammar applies to all Lean comment kinds), but the
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.lean4
+>   outer scope stays `comment.block.lean4` rather than the doc variant. -/
+#^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.lean4
+#                     ^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                      ^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown
+#                                         ^ source.lean4 comment.block.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.lean4
+#                                                                        ^^ source.lean4 comment.block.lean4
+>def afterMarkdownInPlainBlock : Nat := 3
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                             ^ source.lean4 meta.definitioncommand.lean4
+#                              ^^^^^^^^^ source.lean4
+#                                       ^ source.lean4 constant.numeric.lean4
+>

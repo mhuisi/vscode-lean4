@@ -3,7 +3,16 @@ out/
 dist/
 .vs/
 .vscode-test/
+.wdio-vscode-service/
+vscode-lean4/wdio-output/
+vscode-lean4/vscode-test-cli-output/
+# Test home that CI uses (`LEAN4_TEST_HOME_OVERRIDE`)
+.lean4-test-home/
 build/
+
+## Lake build output, if a test builds a fixture in place. The tests copy a
+## fixture into the test home before they build it (`scaffoldFromFixture`).
+vscode-lean4/test/fixtures/**/.lake/
 
 ## Output
 node_modules/

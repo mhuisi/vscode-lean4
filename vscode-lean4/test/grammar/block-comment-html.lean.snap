@@ -1,0 +1,69 @@
+>-- Regression fixture for issues #369 and #656: HTML `begin/while` rules in the
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                                     ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                      ^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                                                 ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                                  ^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- markdown grammar used to escape past `-/`, swallowing subsequent Lean code.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                        ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                         ^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                           ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>
+>/--
+#^^^ source.lean4 comment.block.documentation.lean4
+><pre>
+#^^^^^^ source.lean4 comment.block.documentation.lean4
+>some preformatted text
+#^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+></pre>
+#^^^^^^^ source.lean4 comment.block.documentation.lean4
+>-/
+#^^ source.lean4 comment.block.documentation.lean4
+>def afterPre : Nat := 1
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#            ^ source.lean4 meta.definitioncommand.lean4
+#             ^^^^^^^^^ source.lean4
+#                      ^ source.lean4 constant.numeric.lean4
+>
+>/--
+#^^^ source.lean4 comment.block.documentation.lean4
+><div>
+#^^^^^^ source.lean4 comment.block.documentation.lean4
+>  nested content
+#^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+></div>
+#^^^^^^^ source.lean4 comment.block.documentation.lean4
+>-/
+#^^ source.lean4 comment.block.documentation.lean4
+>def afterDiv : Nat := 2
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#            ^ source.lean4 meta.definitioncommand.lean4
+#             ^^^^^^^^^ source.lean4
+#                      ^ source.lean4 constant.numeric.lean4
+>
+>/-!
+#^^^ source.lean4 comment.block.documentation.lean4
+><script>
+#^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+>let x = 1
+#^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+></script>
+#^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+>-/
+#^^ source.lean4 comment.block.documentation.lean4
+>def afterScript : Nat := 3
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#               ^ source.lean4 meta.definitioncommand.lean4
+#                ^^^^^^^^^ source.lean4
+#                         ^ source.lean4 constant.numeric.lean4
+>

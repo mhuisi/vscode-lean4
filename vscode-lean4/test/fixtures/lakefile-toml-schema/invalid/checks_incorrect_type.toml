@@ -1,0 +1,4 @@
+# `checks` with a single string. Lake expects an array of module names.
+# Expected error: expected a value of type Array, but found String
+name = "foo"
+checks = "Foo.Checks"

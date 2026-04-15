@@ -1,0 +1,6 @@
+name = "outer"
+defaultTargets = ["Main"]
+
+[[lean_exe]]
+name = "Main"
+root = "Main"

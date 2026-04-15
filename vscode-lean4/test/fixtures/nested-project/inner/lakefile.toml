@@ -1,0 +1,5 @@
+name = "inner"
+defaultTargets = ["Inner"]
+
+[[lean_lib]]
+name = "Inner"

@@ -1,0 +1,61 @@
+>-- Baseline sanity fixture: common tokens across the grammar.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- Regressions here catch broad breakage; focused bugs live in the other fixtures.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>
+>import Lean
+#^^^^^^ source.lean4 keyword.other.lean4
+#      ^^^^^^ source.lean4
+>
+>namespace Example
+#^^^^^^^^^ source.lean4 keyword.other.lean4
+#         ^^^^^^^^^ source.lean4
+>
+>def greeting : String := "hello, world"
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#            ^ source.lean4 meta.definitioncommand.lean4
+#             ^^^^^^^^^^^^ source.lean4
+#                         ^ source.lean4 string.quoted.double.lean4
+#                          ^^^^^^^^^^^^ source.lean4 string.quoted.double.lean4
+#                                      ^ source.lean4 string.quoted.double.lean4
+>
+>/-- A documented function. -/
+#^^^ source.lean4 comment.block.documentation.lean4
+#   ^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+#                           ^^ source.lean4 comment.block.documentation.lean4
+>def double (n : Nat) : Nat := n + n
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#          ^ source.lean4 meta.definitioncommand.lean4
+#           ^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4
+>
+>theorem double_add_one (n : Nat) : double n + 1 = 2 * n + 1 := by
+#^^^^^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#       ^ source.lean4 meta.definitioncommand.lean4
+#        ^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                      ^ source.lean4 meta.definitioncommand.lean4
+#                       ^^^^^^^^^^^^^^^^^^^^^^^ source.lean4
+#                                              ^ source.lean4 constant.numeric.lean4
+#                                               ^^^ source.lean4
+#                                                  ^ source.lean4 constant.numeric.lean4
+#                                                   ^^^^^^^ source.lean4
+#                                                          ^ source.lean4 constant.numeric.lean4
+#                                                           ^^^^ source.lean4
+#                                                               ^^ source.lean4 keyword.other.lean4
+>  simp [double, Nat.two_mul]
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4
+>
+>#eval double 21
+#^^^^^ source.lean4 keyword.other.lean4
+#     ^^^^^^^^ source.lean4
+#             ^^ source.lean4 constant.numeric.lean4
+>
+>end Example
+#^^^ source.lean4 keyword.other.lean4
+#   ^^^^^^^^^ source.lean4
+>

@@ -1,0 +1,5 @@
+name = "lakefile-no-toolchain"
+defaultTargets = ["LakefileNoToolchain"]
+
+[[lean_lib]]
+name = "LakefileNoToolchain"

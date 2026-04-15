@@ -1,0 +1,12 @@
+# The same error as in `require_git_incorrect_type.toml`, but in the second dependency.
+# The schema must check all `[[require]]` entries, not only the first entry.
+# Expected error: expected a value of type String, but found Integer
+name = "foo"
+
+[[require]]
+name = "a"
+git = "https://github.com/User/a"
+
+[[require]]
+name = "b"
+git = 2

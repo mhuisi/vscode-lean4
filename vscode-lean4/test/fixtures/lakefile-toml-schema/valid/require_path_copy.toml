@@ -1,0 +1,7 @@
+# A path dependency with `copy`.
+name = "foo"
+
+[[require]]
+name = "local"
+path = "../local"
+copy = true

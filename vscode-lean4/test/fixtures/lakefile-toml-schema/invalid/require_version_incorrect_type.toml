@@ -1,0 +1,8 @@
+# A dependency with an integer `version`. Lake expects a version range string.
+# Expected error: expected a value of type String, but found Integer
+name = "foo"
+
+[[require]]
+name = "dependency"
+scope = "leanprover-community"
+version = 1

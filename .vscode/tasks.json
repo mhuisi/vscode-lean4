@@ -69,6 +69,46 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            // Compiles the tests to `vscode-lean4/out/`. Depends on `build`,
+            // because the tests import types from the `dist/` folders.
+            "label": "compile-tests",
+            "type": "shell",
+            "command": "npm run compile-tests --workspace=lean4",
+            "problemMatcher": "$tsc",
+            "dependsOn": "build",
+            "dependsOrder": "sequence",
+            "presentation": {
+                "reveal": "never"
+            }
+        },
+        {
+            // The `preLaunchTask` of the vscode-test-cli debug configuration.
+            // Compiles the tests and prepares the test home: the debug
+            // configuration starts VS Code without `scripts/runCliTests.mjs`.
+            "label": "prepare-test-debug",
+            "type": "shell",
+            "command": "node vscode-lean4/scripts/prepareTestHome.mjs",
+            "problemMatcher": [],
+            "dependsOn": "compile-tests",
+            "dependsOrder": "sequence",
+            "presentation": {
+                "reveal": "never"
+            }
+        },
+        {
+            // All tests except the network tests, in `xvfb-run` on Linux.
+            "label": "test",
+            "type": "npm",
+            "script": "test:headless",
+            "dependsOn": "build",
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }

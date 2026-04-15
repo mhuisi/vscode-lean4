@@ -1,0 +1,15 @@
+# A `[[lean_lib]]` target with the common library options.
+name = "foo"
+
+[[lean_lib]]
+name = "Foo"
+srcDir = "src"
+roots = ["Foo", "Bar"]
+globs = ["Foo.+", "Bar.*"]
+libName = "foo"
+precompileModules = true
+precompileLibrary = true
+allowImportAll = true
+needs = ["@/data"]
+defaultFacets = ["leanArts", "static"]
+moreLinkArgs = ["-lfoo"]

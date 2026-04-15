@@ -1,0 +1,15 @@
+# A dependency without the required `name` key.
+# Expected error: "name" is required
+name = "foo"
+version = "0.1.0"
+defaultTargets = ["foo"]
+
+[[require]]
+rev = "main"
+
+[[lean_lib]]
+name = "Foo"
+
+[[lean_exe]]
+name = "foo"
+root = "Main"

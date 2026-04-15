@@ -1,0 +1,11 @@
+# Dependencies with a `source` table.
+# The schema does not list `source`, but it must not reject it.
+name = "foo"
+
+[[require]]
+name = "dependency"
+source = { type = "git", url = "https://github.com/User/package", rev = "main", subDir = "subdirectory" }
+
+[[require]]
+name = "local"
+source = { type = "path", dir = "../local", copy = true }

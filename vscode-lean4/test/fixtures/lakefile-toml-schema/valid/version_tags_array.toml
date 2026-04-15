@@ -1,0 +1,3 @@
+# `versionTags` as an array of tags.
+name = "foo"
+versionTags = ["v1.0.0", "v2.0.0"]

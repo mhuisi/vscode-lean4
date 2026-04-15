@@ -1,0 +1,7 @@
+# An unknown dependency key (`scop` instead of `scope`).
+# Lake ignores unknown keys, so the schema must not reject them.
+name = "foo"
+
+[[require]]
+name = "batteries"
+scop = "leanprover-community"

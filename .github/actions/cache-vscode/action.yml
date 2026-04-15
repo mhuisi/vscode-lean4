@@ -1,0 +1,66 @@
+name: Cache VS Code test binaries
+description: >
+  Restores and saves the VS Code downloads of vscode-test-cli (`.vscode-test`,
+  which also holds the extensions that vscode-test-cli installs) and wdio
+  (`.wdio-vscode-service`, which also holds Chromedriver). The cache key
+  contains the VS Code versions of
+  both. Sets `LEAN4_VSCODE_VERSION` and `LEAN4_WDIO_VSCODE_VERSION` for the
+  next steps, so that vscode-test-cli and wdio use the versions of the key.
+
+inputs:
+  save:
+    description: >
+      If `'false'`, only restore the cache. A job that does not run wdio must
+      not save it: the cache would then have no `.wdio-vscode-service`, and no
+      later job could save the full cache with the same key. Also, if the
+      VS Code versions are not available, the job continues without the cache.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    # `vscode-lean4/scripts/vscodeVersions.mjs` explains why the two versions
+    # can be different. A job that runs wdio needs the versions. A job that
+    # only restores the cache does not: without the cache, vscode-test
+    # downloads VS Code.
+    - name: Resolve VS Code versions
+      id: vscode
+      shell: bash
+      env:
+        SAVE: ${{ inputs.save }}
+      run: |
+        if ! versions="$(node vscode-lean4/scripts/vscodeVersions.mjs)"; then
+          if [ "$SAVE" = 'false' ]; then
+            echo "::warning::Cannot get the VS Code versions. The job continues without the VS Code cache."
+            exit 0
+          fi
+          exit 1
+        fi
+        echo "$versions"
+        echo "$versions" >> "$GITHUB_OUTPUT"
+        echo "LEAN4_VSCODE_VERSION=$(echo "$versions" | sed -n 's/^latest=//p')" >> "$GITHUB_ENV"
+        echo "LEAN4_WDIO_VSCODE_VERSION=$(echo "$versions" | sed -n 's/^wdio=//p')" >> "$GITHUB_ENV"
+
+    # There are no `restore-keys`: an old cache would keep the old VS Code
+    # versions (the cache would grow), and wdio would keep using the old one.
+    # GitHub does not save a cache again under a key that exists. Thus, when the
+    # content of the cache changes, change the suffix of the key in both steps
+    # (`-chromedriver`: since Chromedriver is in `.wdio-vscode-service`).
+    - name: Cache VS Code test binaries
+      if: inputs.save != 'false'
+      uses: actions/cache@v4
+      with:
+        path: |
+          vscode-lean4/.vscode-test
+          vscode-lean4/.wdio-vscode-service
+        key: vscode-test-${{ runner.os }}-${{ steps.vscode.outputs.latest }}-wdio-${{ steps.vscode.outputs.wdio }}-chromedriver
+
+    - name: Restore VS Code test binaries
+      if: inputs.save == 'false' && steps.vscode.outputs.latest != ''
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          vscode-lean4/.vscode-test
+          vscode-lean4/.wdio-vscode-service
+        key: vscode-test-${{ runner.os }}-${{ steps.vscode.outputs.latest }}-wdio-${{ steps.vscode.outputs.wdio }}-chromedriver

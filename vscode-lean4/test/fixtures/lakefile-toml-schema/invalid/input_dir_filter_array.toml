@@ -1,0 +1,7 @@
+# An `[[input_dir]]` target with an array as `filter`. Lake expects `"*"` or a path pattern table.
+# Expected error: expected a value of type Table, but found Array
+name = "foo"
+
+[[input_dir]]
+name = "data"
+filter = ["data.json"]

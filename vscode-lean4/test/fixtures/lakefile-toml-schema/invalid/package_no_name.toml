@@ -1,0 +1,3 @@
+# A package without the required `name` key.
+# Expected error: "name" is required
+version = "0.1.0"

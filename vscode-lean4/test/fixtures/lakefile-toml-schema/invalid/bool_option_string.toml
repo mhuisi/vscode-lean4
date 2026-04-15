@@ -1,0 +1,4 @@
+# A boolean option with a string value. Lake expects a boolean.
+# Expected error: expected a value of type Boolean, but found String
+name = "foo"
+precompileModules = "false"

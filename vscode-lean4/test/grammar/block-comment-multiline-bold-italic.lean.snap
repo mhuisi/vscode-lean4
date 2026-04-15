@@ -1,0 +1,113 @@
+>-- Pins a deliberate trade-off of the fix for the Zulip report
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- https://leanprover.zulipchat.com/#narrow/near/573942750: bold/italic
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- markdown spans inside Lean comments are NOT allowed to span multiple
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- lines. The `bold` and `italic` end patterns in
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#              ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#               ^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                   ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                    ^^^^^ source.lean4 comment.line.double-dash.lean4
+#                         ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                          ^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                 ^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- `lean4-markdown.json` carry an `|(?=$|-/)` clause so they close at end
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^ source.lean4 comment.line.double-dash.lean4
+#   ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#    ^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                       ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                        ^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                  ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                   ^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                            ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- of line or at the start of a `-/` doc-comment terminator.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                 ^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                   ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                    ^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>--
+#^^ source.lean4 comment.line.double-dash.lean4
+>-- Without this, a bold opener whose closer landed on the next line would
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- swallow text across the line boundary, and (worse) a same-line bold
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- whose closer was supposed to match `-/` would consume the doc-comment
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                      ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                       ^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                         ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- terminator and keep the block comment open.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>
+>/--
+#^^^ source.lean4 comment.block.documentation.lean4
+>**bold opener with no closer on this line
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+>plain text on the next line — must NOT be tokenized as bold
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+>-/
+#^^ source.lean4 comment.block.documentation.lean4
+>def afterMultilineBoldDocComment : Nat := 0
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                                ^ source.lean4 meta.definitioncommand.lean4
+#                                 ^^^^^^^^^ source.lean4
+#                                          ^ source.lean4 constant.numeric.lean4
+>
+>/--
+#^^^ source.lean4 comment.block.documentation.lean4
+>*italic opener with no closer on this line
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+>plain text on the next line — must NOT be tokenized as italic
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+>-/
+#^^ source.lean4 comment.block.documentation.lean4
+>def afterMultilineItalicDocComment : Nat := 1
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                                  ^ source.lean4 meta.definitioncommand.lean4
+#                                   ^^^^^^^^^ source.lean4
+#                                            ^ source.lean4 constant.numeric.lean4
+>
+>/-- **unterminated bold ends here -/
+#^^^ source.lean4 comment.block.documentation.lean4
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+#                                  ^^ source.lean4 comment.block.documentation.lean4
+>def afterSameLineUnterminatedBold : Nat := 2
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                                 ^ source.lean4 meta.definitioncommand.lean4
+#                                  ^^^^^^^^^ source.lean4
+#                                           ^ source.lean4 constant.numeric.lean4
+>
+>/-- *unterminated italic ends here -/
+#^^^ source.lean4 comment.block.documentation.lean4
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+#                                   ^^ source.lean4 comment.block.documentation.lean4
+>def afterSameLineUnterminatedItalic : Nat := 3
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                                   ^ source.lean4 meta.definitioncommand.lean4
+#                                    ^^^^^^^^^ source.lean4
+#                                             ^ source.lean4 constant.numeric.lean4
+>

@@ -1,0 +1,17 @@
+# A dependency with an integer value for `git`. Lake expects a URL string or a table.
+# Expected error: expected a value of type String, but found Integer
+name = "foo"
+version = "0.1.0"
+defaultTargets = ["foo"]
+
+[[require]]
+name = "dependency"
+git = 2
+rev = "main"
+
+[[lean_lib]]
+name = "Foo"
+
+[[lean_exe]]
+name = "foo"
+root = "Main"

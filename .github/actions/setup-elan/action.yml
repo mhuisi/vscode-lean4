@@ -1,0 +1,75 @@
+name: Set up elan + Lean toolchain
+description: >
+  Installs elan into the CI test home (if the cache does not have it), adds
+  its `bin/` to `$GITHUB_PATH`, and installs a Lean toolchain, so that a
+  download problem shows as a failed step and not as a failed test.
+  Optionally makes that toolchain the elan default. The caller restores and
+  saves the elan cache, if it uses one.
+
+inputs:
+  channel:
+    description: Lean toolchain channel (e.g. leanprover/lean4:stable, leanprover/lean4:nightly).
+    required: true
+  default:
+    description: If `'true'`, set the channel as elan's default toolchain after install.
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    # The extension runs the same install scripts (`src/utils/leanInstaller.ts`).
+    # The installer writes `.profile` into the test home. A test home that
+    # contains more than `.elan` must have the marker file
+    # `.lean4-test-home` (`vscode-lean4/scripts/testHome.mjs`). Thus we write
+    # the marker before the installer runs.
+    - name: Install elan (Linux/macOS, if not cached)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        HOME_OVERRIDE="$GITHUB_WORKSPACE/.lean4-test-home"
+        mkdir -p "$HOME_OVERRIDE"
+        touch "$HOME_OVERRIDE/.lean4-test-home"
+        if [ ! -x "$HOME_OVERRIDE/.elan/bin/elan" ]; then
+          HOME="$HOME_OVERRIDE" ELAN_HOME="$HOME_OVERRIDE/.elan" \
+            bash vscode-lean4/scripts/elan-install/install-unix.sh
+        fi
+        echo "$HOME_OVERRIDE/.elan/bin" >> "$GITHUB_PATH"
+
+    - name: Install elan (Windows, if not cached)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $homeOverride = Join-Path $env:GITHUB_WORKSPACE '.lean4-test-home'
+        New-Item -ItemType Directory -Force -Path $homeOverride | Out-Null
+        $marker = Join-Path $homeOverride '.lean4-test-home'
+        if (-not (Test-Path $marker)) { New-Item -ItemType File -Path $marker | Out-Null }
+        $elanBin = Join-Path $homeOverride '.elan\bin\elan.exe'
+        if (-not (Test-Path $elanBin)) {
+          $env:USERPROFILE = $homeOverride
+          $env:ELAN_HOME = (Join-Path $homeOverride '.elan')
+          & "$env:GITHUB_WORKSPACE\vscode-lean4\scripts\elan-install\install-windows.ps1"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
+        Add-Content -Path $env:GITHUB_PATH -Value (Join-Path $homeOverride '.elan\bin')
+
+    # `elan-init` does not install the default toolchain. Older elan versions
+    # fail with "is already installed" if the toolchain is installed; that
+    # is not an error here. `bash` also on Windows (Git Bash).
+    - name: Pre-install ${{ inputs.channel }}${{ inputs.default == 'true' && ' + set as elan default' || '' }}
+      shell: bash
+      env:
+        ELAN_HOME: ${{ github.workspace }}/.lean4-test-home/.elan
+        CHANNEL: ${{ inputs.channel }}
+        SET_DEFAULT: ${{ inputs.default }}
+      run: |
+        if out=$(elan toolchain install "$CHANNEL" 2>&1); then
+          echo "$out"
+        else
+          ec=$?
+          echo "$out"
+          echo "$out" | grep -q 'is already installed' || exit "$ec"
+        fi
+        if [ "$SET_DEFAULT" = "true" ]; then
+          elan default "$CHANNEL"
+        fi

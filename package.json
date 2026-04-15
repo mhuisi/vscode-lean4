@@ -5,7 +5,11 @@
         "build": "nx run-many -t build --output-style=stream",
         "build:dev": "nx run-many -t build:dev --output-style=stream",
         "watch": "nx run-many -t build:dev --exclude lean4 --output-style=stream && nx run-many -t watch --output-style=stream",
-        "lint": "eslint -c .eslintrc.js \"{lean4-infoview-api,lean4-infoview,lean4-unicode-input,lean4-unicode-input-component,vscode-lean4}/src/**/*.{ts,tsx}\"",
+        "lint": "eslint -c .eslintrc.js \"{lean4-infoview-api,lean4-infoview,lean4-unicode-input,lean4-unicode-input-component,vscode-lean4}/src/**/*.{ts,tsx}\" \"{lean4-infoview-api,lean4-infoview,lean4-unicode-input,vscode-lean4}/test/**/*.{ts,tsx}\" \"vscode-lean4/**/*.mjs\" \"scripts/**/*.mjs\" vitest.config.ts",
+        "test:unit": "vitest run",
+        "test:unit:watch": "vitest",
+        "test": "node scripts/runAllTests.mjs",
+        "test:headless": "node vscode-lean4/scripts/headless.mjs npm test",
         "prepare": "husky install"
     },
     "workspaces": [
@@ -28,7 +32,8 @@
         "prettier-plugin-organize-imports": "^3.2.4",
         "typedoc": "^0.28.20",
         "typedoc-plugin-mdn-links": "^5.1.1",
-        "typescript": "^5.4.5"
+        "typescript": "^5.4.5",
+        "vitest": "^2.1.9"
     },
     "lint-staged": {
         "*.{ts,tsx,js}": [

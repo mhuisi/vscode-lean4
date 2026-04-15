@@ -1,6 +1,6 @@
 # Configuration of the Tombi TOML language server for this repository.
-# The test cases of the `lakefileTomlSchema` tests contain invalid TOML on purpose,
+# The test cases of the `lakefile-toml-schema` tests contain invalid TOML on purpose,
 # so Tombi does not lint or format them.
 # The tests copy each test case into a temporary folder, so this setting does not affect the tests.
 [files]
-exclude = ["vscode-lean4/test/test-fixtures/lakefileTomlSchemaTestCases/**"]
+exclude = ["vscode-lean4/test/fixtures/lakefile-toml-schema/**"]

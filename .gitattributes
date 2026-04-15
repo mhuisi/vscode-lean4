@@ -1,0 +1,5 @@
+# The CI job `test-nightly` changes `lean-toolchain` files with `sed`, and the
+# extension runs the `.sh` install scripts. On Windows, Git can check out files
+# with CRLF line endings, and both need LF.
+lean-toolchain text eol=lf
+*.sh text eol=lf

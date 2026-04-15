@@ -16,6 +16,13 @@ on:
     branches: [master]
     tags: ['*']
 
+# A newer commit on the same ref cancels the older run. Manual runs (publish,
+# release) get their own group, so that they cancel nothing and are never
+# cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   id-token: write
@@ -96,6 +103,11 @@ jobs:
 
       - name: Install
         run: npm ci
+
+      # The type-aware lint rules need the `dist/` folders of the workspace
+      # packages. Without them, imports from other packages have the type `any`.
+      - name: Build (for type-aware lint)
+        run: npm run build:dev
 
       - name: Lint
         run: npm run lint

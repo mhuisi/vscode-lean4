@@ -1,0 +1,5 @@
+name = "mockcacheproj"
+
+[[lean_exe]]
+name = "cache"
+root = "FakeCache"

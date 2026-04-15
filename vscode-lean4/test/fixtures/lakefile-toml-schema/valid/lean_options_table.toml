@@ -1,0 +1,11 @@
+# Lean options in an inline table, in a `[moreServerOptions]` table and in a `[[lean_lib]]` target.
+# The option names are dotted keys.
+name = "foo"
+leanOptions = { autoImplicit = false, maxHeartbeats = 400000, pp.unicode.fun = true }
+
+[moreServerOptions]
+trace.Meta.synthInstance = true
+
+[[lean_lib]]
+name = "Foo"
+leanOptions.weak.linter.all = true

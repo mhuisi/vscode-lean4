@@ -1,0 +1,76 @@
+>-- Markdown inside block doc comments: code fences, lists, and paragraphs
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- must all terminate at `-/` rather than consuming it.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                         ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                          ^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                            ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>
+>/--
+#^^^ source.lean4 comment.block.documentation.lean4
+># Heading
+#^ source.lean4 comment.block.documentation.lean4 markup.heading.markdown heading.1.markdown punctuation.definition.heading.markdown
+# ^ source.lean4 comment.block.documentation.lean4 markup.heading.markdown heading.1.markdown
+#  ^^^^^^^ source.lean4 comment.block.documentation.lean4 markup.heading.markdown heading.1.markdown entity.name.section.markdown
+>
+>A paragraph with **bold** and *italic* text.
+#^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+#                 ^^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#                   ^^^^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown
+#                       ^^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#                         ^^^^^ source.lean4 comment.block.documentation.lean4
+#                              ^ source.lean4 comment.block.documentation.lean4 markup.italic.markdown punctuation.definition.italic.markdown
+#                               ^^^^^^ source.lean4 comment.block.documentation.lean4 markup.italic.markdown
+#                                     ^ source.lean4 comment.block.documentation.lean4 markup.italic.markdown punctuation.definition.italic.markdown
+#                                      ^^^^^^^ source.lean4 comment.block.documentation.lean4
+>
+>- first item
+#^ source.lean4 comment.block.documentation.lean4 markup.list.unnumbered.markdown punctuation.definition.list.begin.markdown
+# ^ source.lean4 comment.block.documentation.lean4 markup.list.unnumbered.markdown
+#  ^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4 markup.list.unnumbered.markdown
+>- second item
+#^ source.lean4 comment.block.documentation.lean4 markup.list.unnumbered.markdown punctuation.definition.list.begin.markdown
+# ^ source.lean4 comment.block.documentation.lean4 markup.list.unnumbered.markdown
+#  ^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4 markup.list.unnumbered.markdown
+>
+>```lean
+#^^^ source.lean4 comment.block.documentation.lean4 markup.fenced_code.block.markdown punctuation.definition.markdown
+#   ^^^^^ source.lean4 comment.block.documentation.lean4 markup.fenced_code.block.markdown fenced_code.block.language
+>example : Nat := 42
+#^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4 markup.fenced_code.block.markdown
+>```
+#^^^ source.lean4 comment.block.documentation.lean4 markup.fenced_code.block.markdown punctuation.definition.markdown
+>
+>Trailing paragraph.
+#^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4
+>-/
+#^^ source.lean4 comment.block.documentation.lean4
+>def afterCodeFence : Nat := 0
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                  ^ source.lean4 meta.definitioncommand.lean4
+#                   ^^^^^^^^^ source.lean4
+#                            ^ source.lean4 constant.numeric.lean4
+>
+>/-!
+#^^^ source.lean4 comment.block.documentation.lean4
+>```
+#^^^ source.lean4 comment.block.documentation.lean4 markup.fenced_code.block.markdown punctuation.definition.markdown
+>plain fenced block
+#^^^^^^^^^^^^^^^^^^^ source.lean4 comment.block.documentation.lean4 markup.fenced_code.block.markdown
+>```
+#^^^ source.lean4 comment.block.documentation.lean4 markup.fenced_code.block.markdown punctuation.definition.markdown
+>-/
+#^^ source.lean4 comment.block.documentation.lean4
+>def afterPlainFence : Nat := 1
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                   ^ source.lean4 meta.definitioncommand.lean4
+#                    ^^^^^^^^^ source.lean4
+#                             ^ source.lean4 constant.numeric.lean4
+>

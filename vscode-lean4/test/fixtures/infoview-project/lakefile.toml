@@ -1,0 +1,6 @@
+name = "infoviewproject"
+defaultTargets = ["Main"]
+
+[[lean_exe]]
+name = "Main"
+root = "Main"

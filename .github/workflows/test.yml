@@ -1,0 +1,223 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+# A newer commit on the same ref cancels the older run. Scheduled and manual
+# runs get their own group, so that they cancel nothing and are never
+# cancelled: only they run the long jobs `test-nightly` and `network`.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.run_id || '' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # unit, type check of the tests, grammar, vscode-test-cli, wdio
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    # A hanging `execFileSync` (lake, elan, git) blocks the event loop, so the
+    # mocha timeouts cannot stop it.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - uses: ./.github/actions/cache-vscode
+
+      # The elan cache key contains the current stable version, so that a new
+      # stable release gets a new cache. There are no `restore-keys`: an old
+      # cache would keep the old toolchains, and the cache would grow.
+      # A failed request gets 3 attempts, as in `fetchWithRetry` of
+      # `vscode-lean4/scripts/vscodeVersions.mjs`. Without the version, the
+      # job runs no tests.
+      - name: Resolve Lean stable version
+        id: lean
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const maxAttempts = 3
+            let data
+            for (let attempt = 1; ; attempt++) {
+              try {
+                const r = await fetch('https://release.lean-lang.org/', { signal: AbortSignal.timeout(10_000) })
+                if (!r.ok) throw new Error(`failed to fetch lean release index: ${r.status}`)
+                data = await r.json()
+                break
+              } catch (e) {
+                if (attempt === maxAttempts) throw e
+                const delayMs = 2_000 * 2 ** (attempt - 1)
+                core.warning(`${e}. Attempt ${attempt + 1} of ${maxAttempts} in ${delayMs / 1000} s.`)
+                await new Promise(resolve => setTimeout(resolve, delayMs))
+              }
+            }
+            const stable = data?.stable?.[0]?.name
+            if (!stable) throw new Error(`no stable release found in lean release index: ${JSON.stringify(data).slice(0, 200)}`)
+            core.setOutput('version', stable)
+
+      # We save the cache directly after `setup-elan`, not at the end of the
+      # job: the tests change `.elan` (default toolchain, links), and a cache
+      # key cannot be saved again.
+      - name: Restore elan + toolchains
+        id: elan-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/.lean4-test-home/.elan
+          key: elan-${{ runner.os }}-${{ steps.lean.outputs.version }}
+
+      - uses: ./.github/actions/setup-elan
+        with:
+          channel: leanprover/lean4:stable
+
+      - name: Save elan + toolchains
+        if: steps.elan-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.lean4-test-home/.elan
+          key: elan-${{ runner.os }}-${{ steps.lean.outputs.version }}
+
+      # `npm ci` does not build the workspace packages. `npm test`
+      # (`scripts/runAllTests.mjs`) builds them before its first suite, and the
+      # `test:network` script of `vscode-lean4/` builds them in `pretest:network`.
+      - run: npm ci
+
+      # The step timeout is less than the job timeout, so that the upload step
+      # has time to run after a hang. The tests usually take less than 10 minutes.
+      - name: Run all tests
+        timeout-minutes: 45
+        env:
+          LEAN4_TEST_HOME_OVERRIDE: ${{ github.workspace }}/.lean4-test-home
+        run: npm run test:headless
+
+      - name: Upload test artifacts
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-test-${{ matrix.os }}
+          path: |
+            vscode-lean4/vscode-test-cli-output/
+            vscode-lean4/wdio-output/
+            .lean4-test-home/vscode-user-data/*/logs/
+          if-no-files-found: ignore
+
+  # The same tests with `leanprover/lean4:nightly`, to find changes in Lean
+  # before a stable release. Only on schedule and dispatch: nightly often breaks.
+  test-nightly:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - uses: ./.github/actions/cache-vscode
+
+      # No elan cache: nightly changes every day.
+      # `default: 'true'` makes nightly the elan default, for the tests of
+      # files outside a project.
+      - uses: ./.github/actions/setup-elan
+        with:
+          channel: leanprover/lean4:nightly
+          default: 'true'
+
+      # Only files that contain exactly `leanprover/lean4:stable` change, so the
+      # mock toolchains of the fixtures stay. `bash` also on Windows (Git Bash).
+      # `.gitattributes` keeps LF line endings in `lean-toolchain` files, else
+      # `$` does not match on Windows. The check fails if a file did not change.
+      - name: Rewrite fixture toolchains to :nightly
+        shell: bash
+        run: |
+          find vscode-lean4/test/fixtures -name lean-toolchain -exec \
+            sed -i 's|^leanprover/lean4:stable$|leanprover/lean4:nightly|' {} +
+          if grep -rl --include=lean-toolchain 'leanprover/lean4:stable' vscode-lean4/test/fixtures; then
+            echo '::error::The files above still use leanprover/lean4:stable.'
+            exit 1
+          fi
+
+      # `npm test` builds the packages (see the job `test`).
+      - run: npm ci
+
+      # `LEAN4_TEST_TOOLCHAIN`: the setup of the test home installs nightly
+      # (already installed above) and makes it the elan default. Some tests
+      # still download stable: `project-init.test.ts` (`createStandaloneProject`)
+      # and `version-management.test.ts` (`selectDefaultToolchain`).
+      - name: Run all tests against Lean nightly
+        timeout-minutes: 45
+        env:
+          LEAN4_TEST_HOME_OVERRIDE: ${{ github.workspace }}/.lean4-test-home
+          LEAN4_TEST_TOOLCHAIN: leanprover/lean4:nightly
+        run: npm run test:headless
+
+      - name: Upload test artifacts
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-test-nightly-${{ matrix.os }}
+          path: |
+            vscode-lean4/vscode-test-cli-output/
+            vscode-lean4/wdio-output/
+            .lean4-test-home/vscode-user-data/*/logs/
+          if-no-files-found: ignore
+
+  # Installs elan, toolchains and Mathlib from the network. Only on schedule
+  # and dispatch. Also on Windows: the elan installer for Windows is different.
+  network:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      # This job does not run wdio (see the action).
+      - uses: ./.github/actions/cache-vscode
+        with:
+          save: 'false'
+
+      # `pretest:network` builds the packages (see the job `test`).
+      - run: npm ci
+      # The same test home as in the other jobs, so that the upload step finds it.
+      - name: Run network tests
+        timeout-minutes: 75
+        env:
+          LEAN4_TEST_HOME_OVERRIDE: ${{ github.workspace }}/.lean4-test-home
+        run: npm run test:headless:network --workspace=lean4
+
+      - name: Upload test artifacts
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-network-${{ matrix.os }}
+          path: |
+            vscode-lean4/vscode-test-cli-output/
+            vscode-lean4/wdio-output/
+            .lean4-test-home/vscode-user-data/*/logs/
+          if-no-files-found: ignore

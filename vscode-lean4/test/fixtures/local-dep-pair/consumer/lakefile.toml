@@ -1,0 +1,13 @@
+name = "consumer"
+
+[[lean_lib]]
+name = "Consumer"
+
+# Lake resolves this relative to the project's working directory; the
+# `local-dep-pair` fixture places `dep/` and `consumer/` as siblings, so
+# `../dep` resolves to the `dep/` half after `scaffoldFromFixture` copies
+# both into the same tmpdir.
+[[require]]
+name = "dep"
+git = "../dep"
+rev = "main"

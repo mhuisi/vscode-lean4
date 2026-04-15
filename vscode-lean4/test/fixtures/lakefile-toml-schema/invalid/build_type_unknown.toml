@@ -1,0 +1,4 @@
+# A `buildType` value that is not a build type of Lake.
+# Expected error: but found "fast"
+name = "foo"
+buildType = "fast"

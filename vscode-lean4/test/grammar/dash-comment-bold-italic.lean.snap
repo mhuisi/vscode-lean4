@@ -1,0 +1,79 @@
+>-- Regression fixture for Zulipchat 573942750.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- Trigger pattern: `-- **a*a**a*` — italic inside bold consumes the second `*`
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                    ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                     ^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                 ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#                                                                            ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#                                                                             ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#                                                                              ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+>-- of `**`, leaving bold without a closer. Bold must NOT persist past the end
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^ source.lean4 comment.line.double-dash.lean4
+#      ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#       ^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#         ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>-- of the `--` line comment.
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+#          ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#           ^^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown
+#             ^ source.lean4 comment.line.double-dash.lean4 markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+#              ^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>
+>-- **a*a**a*
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^ source.lean4 comment.line.double-dash.lean4
+#   ^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#     ^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown
+#      ^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown markup.italic.markdown punctuation.definition.italic.markdown
+#       ^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown markup.italic.markdown
+#         ^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown markup.italic.markdown punctuation.definition.italic.markdown
+#          ^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown
+>-- plain text after the broken-bold line above
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>
+>/-- **a*a**a* -/
+#^^^ source.lean4 comment.block.documentation.lean4
+#   ^ source.lean4 comment.block.documentation.lean4
+#    ^^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#      ^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown
+#       ^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown markup.italic.markdown punctuation.definition.italic.markdown
+#        ^^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown markup.italic.markdown
+#          ^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown markup.italic.markdown punctuation.definition.italic.markdown
+#           ^^^ source.lean4 comment.block.documentation.lean4 markup.bold.markdown
+#              ^^ source.lean4 comment.block.documentation.lean4
+>def afterBlockDocComment : Nat := 0
+#^^^ source.lean4 meta.definitioncommand.lean4 keyword.other.definitioncommand.lean4
+#   ^ source.lean4 meta.definitioncommand.lean4
+#    ^^^^^^^^^^^^^^^^^^^^ source.lean4 meta.definitioncommand.lean4 entity.name.function.lean4
+#                        ^ source.lean4 meta.definitioncommand.lean4
+#                         ^^^^^^^^^ source.lean4
+#                                  ^ source.lean4 constant.numeric.lean4
+>
+>-- *italic* **bold** ***both***
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^ source.lean4 comment.line.double-dash.lean4
+#   ^ source.lean4 comment.line.double-dash.lean4 markup.italic.markdown punctuation.definition.italic.markdown
+#    ^^^^^^ source.lean4 comment.line.double-dash.lean4 markup.italic.markdown
+#          ^ source.lean4 comment.line.double-dash.lean4 markup.italic.markdown punctuation.definition.italic.markdown
+#           ^ source.lean4 comment.line.double-dash.lean4
+#            ^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#              ^^^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown
+#                  ^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#                    ^ source.lean4 comment.line.double-dash.lean4
+#                     ^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+#                       ^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown markup.italic.markdown punctuation.definition.italic.markdown
+#                        ^^^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown markup.italic.markdown
+#                            ^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown markup.italic.markdown punctuation.definition.italic.markdown
+#                             ^^ source.lean4 comment.line.double-dash.lean4 markup.bold.markdown punctuation.definition.bold.markdown
+>-- trailing plain text must tokenize as comment, not bold
+#^^ source.lean4 comment.line.double-dash.lean4
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.lean4 comment.line.double-dash.lean4
+>

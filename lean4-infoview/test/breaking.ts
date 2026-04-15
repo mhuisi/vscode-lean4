@@ -89,10 +89,14 @@ type NextRelease = typeof import('../src/index')
 
 /**
  * Ensures that the test isn't broken. The codebase should always be compatible with itself.
+ * `CheckExtends` is always `never`: the check is its type constraint. Thus both union members
+ * are `never`, and the lint rules about redundant union members do not apply.
  */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-duplicate-type-constituents */
 type CheckSelfCompatible =
     | CheckExtends<Recordify<Pick<CurrentRelease, keyof CurrentRelease>>, Recordify<CurrentRelease>>
     | CheckExtends<Recordify<Pick<NextRelease, keyof NextRelease>>, Recordify<NextRelease>>
+/* eslint-enable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-duplicate-type-constituents */
 
 /**
  * Compile-time error if the current version makes any breaking changes relative to the latest release.

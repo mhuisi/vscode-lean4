@@ -1,0 +1,6 @@
+# A `[[lean_exe]]` target with an integer `name`. Lake expects a string.
+# Expected error: expected a value of type String, but found Integer
+name = "foo"
+
+[[lean_exe]]
+name = 3

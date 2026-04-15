@@ -27,18 +27,22 @@ module.exports = {
     parserOptions: {
         project: [
             './lean4-infoview-api/tsconfig.json',
+            './lean4-infoview-api/test/tsconfig.json',
             './lean4-infoview/tsconfig.json',
             './lean4-infoview/test/tsconfig.json',
             './lean4-unicode-input/tsconfig.json',
+            './lean4-unicode-input/test/tsconfig.json',
             './lean4-unicode-input-component/tsconfig.json',
             './vscode-lean4/tsconfig.json',
+            './vscode-lean4/tsconfig.test.json',
             './vscode-lean4/webview/tsconfig.json',
             './vscode-lean4/loogleview/tsconfig.json',
             './vscode-lean4/abbreviationview/tsconfig.json',
         ],
         sourceType: 'module',
     },
-    ignorePatterns: ['**/dist/**/*', '**/out/**/*', '*.js'],
+    // ESLint 8 ignores files that start with `.`, so include `.vscode-test.mjs` again.
+    ignorePatterns: ['**/dist/**/*', '**/out/**/*', '*.js', '!.vscode-test.mjs'],
     plugins: ['@typescript-eslint', '@typescript-eslint/eslint-plugin'],
     rules: {
         '@typescript-eslint/adjacent-overload-signatures': 'error',
@@ -141,4 +145,33 @@ module.exports = {
         radix: 'off',
         'no-shadow': 'off',
     },
+    overrides: [
+        {
+            // No tsconfig contains these files, so the type-aware rules cannot run on them.
+            files: ['*.mjs', 'vitest.config.ts'],
+            parserOptions: { project: null },
+            extends: ['plugin:@typescript-eslint/disable-type-checked'],
+        },
+        {
+            // These tests run in VS Code, next to the webpack bundle of the extension.
+            // A runtime import of `src/` loads a second copy of the extension code,
+            // with its own state. Only type imports are permitted.
+            files: ['vscode-lean4/test/{vscode-test-cli,network,wdio,helpers}/**/*.ts'],
+            rules: {
+                '@typescript-eslint/no-restricted-imports': [
+                    'error',
+                    {
+                        patterns: [
+                            {
+                                group: ['**/src', '**/src/**'],
+                                allowTypeImports: true,
+                                message:
+                                    'Use `import type`. Get the objects of the running extension through its exports (`test/helpers/client.ts`).',
+                            },
+                        ],
+                    },
+                ],
+            },
+        },
+    ],
 }
