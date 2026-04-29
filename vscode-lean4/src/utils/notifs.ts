@@ -92,7 +92,6 @@ function makeSticky<T>(n: StickyNotification<T>): Disposable {
             nextStickyNotification = undefined
             await setStickyNotificationActiveButHidden(false)
             d?.dispose()
-            console.log(e)
         } finally {
             isDisplaying = false
         }

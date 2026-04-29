@@ -6,7 +6,6 @@ import { FoldingRangesProvidedEvent, LeanClient } from '../leanclient'
 import { LeanPublishDiagnosticsParams } from './converters'
 import { ExtUri, FileUri } from './exturi'
 import { lean } from './leanEditorProvider'
-import { logger } from './logger'
 import { displayNotification } from './notifs'
 import { findLeanProjectRootInfo, willUseLakeServer } from './projectInfo'
 
@@ -220,7 +219,6 @@ export class LeanClientProvider implements Disposable {
             return [false, undefined]
         }
 
-        logger.log('[ClientProvider] Creating LeanClient for ' + folderUri.toString())
         client = await LeanClient.init(folderUri, this.outputChannel)
         this.subscriptions.push(client)
         this.clients.set(key, client)

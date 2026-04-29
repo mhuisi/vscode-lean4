@@ -48,7 +48,6 @@ import {
     serverArgs,
     shouldAutofocusOutput,
 } from './config'
-import { logger } from './utils/logger'
 // @ts-ignore
 import * as fs from 'fs'
 import { glob } from 'glob'
@@ -488,7 +487,6 @@ export class LeanClient implements Disposable {
                 }
             }
 
-            logger.log('[LeanClient] Restarting Lean Server')
             if (this.isStarted()) {
                 await this.stop()
             }
@@ -545,7 +543,6 @@ export class LeanClient implements Disposable {
     ): Promise<void> {
         // Should only be called from `restart`
 
-        const startTime = Date.now()
         progress.report({})
         const toolchainOverrideResult = await this.determineToolchainOverride(defaultToolchain)
         if (toolchainOverrideResult.kind === 'Error') {
@@ -561,18 +558,13 @@ export class LeanClient implements Disposable {
         try {
             this.client.onDidChangeState(async s => {
                 // see https://github.com/microsoft/vscode-languageserver-node/issues/825
-                if (s.newState === State.Starting) {
-                    logger.log('[LeanClient] starting')
-                } else if (s.newState === State.Running) {
-                    const end = Date.now()
-                    logger.log(`[LeanClient] running, started in ${end - startTime} ms`)
+                if (s.newState === State.Running) {
                     this.running = true // may have been auto restarted after it failed.
                     if (!insideRestart) {
                         this.restartedEmitter.fire(undefined)
                     }
                 } else if (s.newState === State.Stopped) {
                     this.running = false
-                    logger.log('[LeanClient] has stopped or it failed to start')
                     if (!this.noPrompt) {
                         // only raise this event and show the message if we are not the ones
                         // who called the stop() method.
@@ -606,7 +598,6 @@ export class LeanClient implements Disposable {
             this.running = true
         } catch (error) {
             const msg = '' + error
-            logger.log(`[LeanClient] restart error ${msg}`)
             this.outputChannel.appendLine(msg)
             this.serverFailedEmitter.fire(msg)
             insideRestart = false
@@ -755,7 +746,7 @@ export class LeanClient implements Disposable {
                 // this to throw an exception which then causes those tests to fail.
                 await this.client.stop()
             } catch (e) {
-                logger.log(`[LeanClient] Error stopping language client: ${e}`)
+                // Ignored, see above.
             }
         }
 
@@ -798,7 +789,6 @@ export class LeanClient implements Disposable {
             )
             return
         }
-        logger.log(`[LeanClient] Restarting File: ${uri}`)
         await this.client.sendNotification(
             'textDocument/didClose',
             this.client.code2ProtocolConverter.asCloseTextDocumentParams(leanDoc.doc),
