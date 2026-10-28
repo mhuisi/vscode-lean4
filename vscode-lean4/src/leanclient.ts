@@ -133,6 +133,27 @@ export interface FoldingRangesProvidedEvent {
     ranges: LeanFoldingRange[] | undefined
 }
 
+// vscode-languageclient writes `[Error - <time>] Server process exited with code 0.`
+// each time that the server stops normally (for example at a restart). This is not an error.
+const CLEAN_EXIT_NOISE = /Server process exited with code 0\.$/
+function filterCleanServerExit(channel: OutputChannel): OutputChannel {
+    return {
+        get name() {
+            return channel.name
+        },
+        append: v => channel.append(v),
+        appendLine: v => {
+            if (CLEAN_EXIT_NOISE.test(v)) return
+            channel.appendLine(v)
+        },
+        replace: v => channel.replace(v),
+        clear: () => channel.clear(),
+        show: channel.show.bind(channel),
+        hide: () => channel.hide(),
+        dispose: () => channel.dispose(),
+    }
+}
+
 export class LeanClient implements Disposable {
     running: boolean
     private client: LanguageClient | undefined
@@ -874,7 +895,7 @@ export class LeanClient implements Disposable {
         }
 
         return {
-            outputChannel: this.outputChannel,
+            outputChannel: filterCleanServerExit(this.outputChannel),
             revealOutputChannelOn: RevealOutputChannelOn.Never, // contrary to the name, this disables the message boxes
             documentSelector: [documentSelector, { ...documentSelector, language: 'lean' }],
             workspaceFolder,
