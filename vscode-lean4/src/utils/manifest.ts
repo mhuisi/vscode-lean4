@@ -1,13 +1,12 @@
 import * as fs from 'fs'
 import { SemVer } from 'semver'
-import { Uri } from 'vscode'
 import { z } from 'zod'
 import { FileUri } from './exturi'
 import { semVerSchema } from './zod'
 
 export interface DirectGitDependency {
     name: string
-    uri: Uri
+    uri: string
     revision: string
     inputRevision: string
 }
@@ -43,7 +42,7 @@ function parseVersion1To6Manifest(version: SemVer, parsedJson: any) {
                 z.object({
                     git: z.object({
                         name: z.string(),
-                        url: z.string().url(),
+                        url: z.string(),
                         rev: z.string(),
                         inherited: z.boolean(),
                         'inputRev?': z.optional(z.nullable(z.string())),
@@ -78,7 +77,7 @@ function parseVersion1To6Manifest(version: SemVer, parsedJson: any) {
 
         manifest.directGitDependencies.push({
             name: pkg.git.name,
-            uri: Uri.parse(pkg.git.url),
+            uri: pkg.git.url,
             revision: pkg.git.rev,
             inputRevision: pkg.git['inputRev?'] ?? 'master', // Lake also always falls back to master
         })
@@ -96,7 +95,7 @@ function parseVersion7ToNManifest(version: SemVer, parsedJson: any) {
                 z.object({
                     type: z.literal('git'),
                     name: z.string(),
-                    url: z.string().url(),
+                    url: z.string(),
                     rev: z.string(),
                     inherited: z.boolean(),
                     inputRev: z.optional(z.nullable(z.string())),
@@ -130,7 +129,7 @@ function parseVersion7ToNManifest(version: SemVer, parsedJson: any) {
 
         manifest.directGitDependencies.push({
             name: pkg.name,
-            uri: Uri.parse(pkg.url),
+            uri: pkg.url,
             revision: pkg.rev,
             inputRevision: pkg.inputRev ?? 'master', // Lake also always falls back to master
         })

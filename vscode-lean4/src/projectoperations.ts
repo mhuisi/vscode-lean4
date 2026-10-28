@@ -266,7 +266,7 @@ export class ProjectOperationProvider implements Disposable {
 
         const items: GitDependencyQuickPickItem[] = manifestResult.directGitDependencies.map(gitDep => ({
             label: gitDep.name,
-            description: gitDep.uri.toString(),
+            description: gitDep.uri,
             ...gitDep,
         }))
 
