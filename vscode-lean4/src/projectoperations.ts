@@ -341,7 +341,7 @@ export class ProjectOperationProvider implements Disposable {
             const message = `${errorFlavor}. Do you wish to update ${dependencyName} without updating the Lean version of the open project to that of ${dependencyName} regardless?`
             const input = 'Proceed'
             const choice: string | undefined = await displayNotificationWithInput('Information', message, [input])
-            return choice === 'input' ? { kind: 'DoNotUpdate' } : { kind: 'Cancelled' }
+            return choice === input ? { kind: 'DoNotUpdate' } : { kind: 'Cancelled' }
         }
         const [localToolchain, dependencyToolchain]: [string, string] = toolchainResult
 
