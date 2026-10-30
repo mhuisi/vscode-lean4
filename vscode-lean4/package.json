@@ -1755,16 +1755,154 @@
                 }
             ]
         },
+        "semanticTokenTypes": [
+            {
+                "id": "markup",
+                "description": "Verso or Markdown markup. This is the supertype of all markup token types. The Lean language server does not send tokens of this type."
+            },
+            {
+                "id": "markupDocText",
+                "superType": "markup",
+                "description": "Text in a documentation comment that is not in a heading, blockquote or list item"
+            },
+            {
+                "id": "markupPlainText",
+                "superType": "markup",
+                "description": "Text outside of a documentation comment, for example in a Verso document, that is not in a heading, blockquote or list item"
+            },
+            {
+                "id": "markupHeading",
+                "superType": "markup",
+                "description": "Text in a Verso or Markdown heading"
+            },
+            {
+                "id": "markupQuote",
+                "superType": "markup",
+                "description": "Text in a Verso or Markdown blockquote"
+            },
+            {
+                "id": "markupList",
+                "superType": "markup",
+                "description": "Text in a Verso or Markdown list item"
+            },
+            {
+                "id": "markupInlineCode",
+                "superType": "markup",
+                "description": "The content of inline code or inline math in Verso or Markdown"
+            },
+            {
+                "id": "markupCodeBlock",
+                "superType": "markup",
+                "description": "A line of a code block in Verso or Markdown"
+            },
+            {
+                "id": "markupUrl",
+                "superType": "markup",
+                "description": "A URL in a Verso or Markdown link, image, autolink or link reference definition"
+            },
+            {
+                "id": "markupCrossReference",
+                "superType": "markup",
+                "description": "The label of a link reference definition, a reference link or a footnote in Verso or Markdown"
+            }
+        ],
+        "semanticTokenModifiers": [
+            {
+                "id": "markupBold",
+                "description": "Bold Verso or Markdown text"
+            },
+            {
+                "id": "markupItalic",
+                "description": "Emphasized (italic) Verso or Markdown text"
+            },
+            {
+                "id": "markupSyntax",
+                "description": "Verso or Markdown syntax, for example a delimiter, a list marker or a fence. The Lean language server sends it as a keyword token with this modifier."
+            }
+        ],
         "semanticTokenScopes": [
             {
                 "scopes": {
                     "keyword": [
                         "keyword.other"
+                    ],
+                    "markup": [
+                        "meta.embedded.markup.lean4"
+                    ],
+                    "markupDocText": [
+                        "source.lean4 comment.block.documentation.lean4",
+                        "comment.block.documentation.lean4"
+                    ],
+                    "markupPlainText": [
+                        "text.html.markdown meta.paragraph.markdown",
+                        "meta.paragraph.markdown"
+                    ],
+                    "markupHeading": [
+                        "text.html.markdown markup.heading.markdown entity.name.section.markdown",
+                        "markup.heading.markdown"
+                    ],
+                    "markupQuote": [
+                        "text.html.markdown markup.quote.markdown meta.paragraph.markdown",
+                        "markup.quote.markdown"
+                    ],
+                    "markupList": [
+                        "text.html.markdown markup.list.unnumbered.markdown meta.paragraph.markdown",
+                        "markup.list.unnumbered.markdown"
+                    ],
+                    "markupInlineCode": [
+                        "text.html.markdown meta.paragraph.markdown markup.inline.raw.string.markdown",
+                        "markup.inline.raw.string.markdown"
+                    ],
+                    "markupCodeBlock": [
+                        "text.html.markdown markup.fenced_code.block.markdown meta.embedded.block.lean4",
+                        "meta.embedded.block.lean4"
+                    ],
+                    "markupUrl": [
+                        "text.html.markdown meta.paragraph.markdown meta.link.inline.markdown markup.underline.link.markdown",
+                        "markup.underline.link.markdown"
+                    ],
+                    "markupCrossReference": [
+                        "text.html.markdown meta.paragraph.markdown meta.link.reference.markdown constant.other.reference.link.markdown",
+                        "constant.other.reference.link.markdown"
+                    ],
+                    "markup.markupBold": [
+                        "text.html.markdown markup.bold.markdown",
+                        "markup.bold.markdown"
+                    ],
+                    "markup.markupItalic": [
+                        "text.html.markdown markup.italic.markdown",
+                        "markup.italic.markdown"
+                    ],
+                    "keyword.markupSyntax": [
+                        "meta.embedded.markup.lean4 text.html.markdown punctuation.definition.markdown",
+                        "meta.embedded.markup.lean4"
                     ]
                 }
             }
         ],
         "configurationDefaults": {
+            "editor.tokenColorCustomizations": {
+                "[*]": {
+                    "textMateRules": [
+                        {
+                            "scope": "meta.embedded.markup.lean4",
+                            "settings": {
+                                "fontStyle": ""
+                            }
+                        }
+                    ]
+                }
+            },
+            "editor.semanticTokenColorCustomizations": {
+                "rules": {
+                    "*.markupBold": {
+                        "bold": true
+                    },
+                    "*.markupItalic": {
+                        "italic": true
+                    }
+                }
+            },
             "files.readonlyInclude": {
                 "**/.lake/**/*.lean": true,
                 "**/.elan/**/*.lean": true
