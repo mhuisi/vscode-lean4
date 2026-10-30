@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process'
+import { windowsPowerShell } from './powershell'
 
 // On Windows, the elan installer adds `<ELAN_HOME>\bin` to the PATH of the user
 // in the registry (`HKCU\Environment`). The test home cannot isolate the
@@ -15,7 +15,7 @@ import { execFileSync } from 'node:child_process'
 // text output of PowerShell.
 
 function powershell(script: string): void {
-    execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { stdio: 'pipe' })
+    windowsPowerShell(['-Command', script])
 }
 
 // Removes each entry of the PATH of the user that is `$ELAN_HOME\bin`. The

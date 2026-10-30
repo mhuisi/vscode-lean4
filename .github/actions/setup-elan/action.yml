@@ -48,8 +48,20 @@ runs:
         if (-not (Test-Path $elanBin)) {
           $env:USERPROFILE = $homeOverride
           $env:ELAN_HOME = (Join-Path $homeOverride '.elan')
-          & "$env:GITHUB_WORKSPACE\vscode-lean4\scripts\elan-install\install-windows.ps1"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # We start the script as the extension does (`src/utils/batch.ts`): with Windows PowerShell
+          # (not `pwsh`), with the same options, with the text of the script as the command, and
+          # without `PSModulePath`. This step runs in `pwsh`, which sets `PSModulePath` for
+          # PowerShell 7, as a process that starts VS Code can do. The script does not set an
+          # execution policy, and `Expand-Archive` in the installer loads a script module.
+          # `elanInstallationMethod` in `src/utils/leanInstaller.ts` makes the same text.
+          $script = Get-Content -Raw -Path "$env:GITHUB_WORKSPACE\vscode-lean4\scripts\elan-install\install-windows.ps1"
+          $powershell = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+          $modulePath = $env:PSModulePath
+          $env:PSModulePath = $null
+          & $powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command $script
+          $rc = $LASTEXITCODE
+          $env:PSModulePath = $modulePath
+          if ($rc -ne 0) { exit $rc }
         }
         Add-Content -Path $env:GITHUB_PATH -Value (Join-Path $homeOverride '.elan\bin')
 

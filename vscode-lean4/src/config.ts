@@ -9,7 +9,9 @@ function processConfigColor(c: string): ThemeColor | string {
 }
 
 export function getPowerShellPath(): string {
-    const windir = process.env.windir
+    // The environment of VS Code does not always contain `windir`. `test/helpers/powershell.ts`
+    // uses the same fallbacks.
+    const windir = process.env.windir || process.env.SystemRoot || 'C:\\Windows'
     return `${windir}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`
 }
 

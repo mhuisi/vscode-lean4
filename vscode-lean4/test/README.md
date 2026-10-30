@@ -143,6 +143,7 @@ The tests in `vscode-test-cli/`, `network/`, `wdio/` and `helpers/` run in VS Co
 | `mockToolchain.withMockToolchain(name, { leanVersion }, fn)` | Link a mock toolchain whose `lean` prints the given version. |
 | `mockToolchain.withLinkedToolchain(name, target, fn)` | Link an installed toolchain folder under another name. |
 | `git.git(cwd, ...args)`, `gitText`, `initGitRepo(dir)` | Run git without the global and system git configuration. |
+| `powershell.windowsPowerShell(args)` | On Windows, run Windows PowerShell in the same state as the extension: full path, no profiles, no `PSModulePath`. |
 | `windowsUserPath.removeTestElanFromWindowsUserPath()` | On Windows, remove `<test home>\.elan\bin` from the PATH of the user in the registry, after a test that installs elan. |
 | `timeouts.*` | Shared timeouts, `pollFor` and `withTimeout`. |
 | `typing.typeChars(text)`, `backspace`, `waitForText`, `expectTextSettles` | Type into the active editor and check the text, for the abbreviation tests. |

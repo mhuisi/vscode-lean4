@@ -79,3 +79,17 @@ export function addToPATH(env: NodeJS.ProcessEnv, path: PATH, pathToAdd: string)
 export function addToProcessEnvPATH(pathToAdd: string) {
     addToPATH(process.env, PATH.ofProcessEnv(), pathToAdd)
 }
+
+/**
+ * Returns a copy of `env` without `PSModulePath`, for Windows PowerShell (`powershell.exe`).
+ *
+ * If VS Code is started from PowerShell 7 (for example with `code .` in `pwsh`, or in a CI step),
+ * `PSModulePath` contains the module folders of PowerShell 7. Windows PowerShell then loads the
+ * modules of PowerShell 7 and fails ("the module could not be loaded"). PowerShell 7 removes
+ * these folders only when it starts Windows PowerShell itself. Without the variable, Windows
+ * PowerShell uses its default module path.
+ */
+export function withoutPSModulePath(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+    // The names of environment variables on Windows are case-insensitive.
+    return Object.fromEntries(Object.entries(env).filter(([name]) => name.toLowerCase() !== 'psmodulepath'))
+}

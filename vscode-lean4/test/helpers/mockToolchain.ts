@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { rmAsync, rmSync } from './fs'
+import { windowsPowerShell } from './powershell'
 import { requireIsolatedTestHome } from './testHome'
 import { withTimeout } from './timeouts'
 
@@ -21,9 +22,7 @@ Add-Type -OutputType ConsoleApplication -OutputAssembly ${psSingleQuote(exePath)
 ${csSource}
 '@`
     const encoded = Buffer.from(psScript, 'utf16le').toString('base64')
-    execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], {
-        stdio: ['ignore', 'pipe', 'pipe'],
-    })
+    windowsPowerShell(['-EncodedCommand', encoded])
 }
 
 // Links a mock toolchain `name` whose `lean` and `lake` print the given
