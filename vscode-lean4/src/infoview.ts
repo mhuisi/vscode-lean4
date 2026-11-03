@@ -736,36 +736,6 @@ export class InfoProvider implements Disposable {
         for (const s of this.subscriptions) s.dispose()
     }
 
-    isOpen(): boolean {
-        return this.webviewPanel?.visible === true
-    }
-
-    async runTestScript(javaScript: string): Promise<void> {
-        if (this.webviewPanel) {
-            return this.webviewPanel.api.runTestScript(javaScript)
-        } else {
-            throw new Error('Cannot run test script, infoview is closed.')
-        }
-    }
-
-    async getHtmlContents(): Promise<string> {
-        if (this.webviewPanel) {
-            return this.webviewPanel.api.getInfoviewHtml()
-        } else {
-            throw new Error('Cannot retrieve infoview HTML, infoview is closed.')
-        }
-    }
-
-    sleep(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms))
-    }
-
-    async toggleAllMessages(): Promise<void> {
-        if (this.webviewPanel) {
-            await this.webviewPanel.api.requestedAction({ kind: 'toggleAllMessages' })
-        }
-    }
-
     private updateStylesheet() {
         // Here we add extra CSS variables which depend on the editor configuration,
         // but are not exposed by default.
