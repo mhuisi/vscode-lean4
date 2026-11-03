@@ -76,12 +76,21 @@ export function depInstallationLocations(): string[] {
     return []
 }
 
+// The first lines give the Windows credentials of the user to a proxy that needs a login. They are
+// the same as the first lines in the script block of `scripts/elan-install/install-windows.ps1`.
+// A change to these lines must be made in the two scripts (`scripts/installation-scripts.md`).
 // The Git installer is a GUI program (also with `/VERYSILENT`). PowerShell does not wait for a GUI
 // program that it starts with `&`, and does not set `$LASTEXITCODE` for it. Thus we start the
 // installer with `Start-Process -Wait`, and exit with its exit code.
 // With a progress display, `Invoke-WebRequest` of Windows PowerShell 5.1 downloads the installer
 // (about 60 MB) much more slowly.
-const windowsRawGitInstallScript = `$ProgressPreference = 'SilentlyContinue'
+const windowsRawGitInstallScript = `if ($ExecutionContext.SessionState.LanguageMode -eq 'FullLanguage') {
+    $proxy = [System.Net.WebRequest]::DefaultWebProxy
+    if ($proxy -and -not $proxy.Credentials) {
+        $proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+    }
+}
+$ProgressPreference = 'SilentlyContinue'
 $gitInstallerUrl = "https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe"
 $installDir = Join-Path $env:TEMP "lean4-vscode-extension"
 $gitInstallerLoc = Join-Path $installDir "GitInstaller.exe"

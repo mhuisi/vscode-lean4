@@ -1,4 +1,10 @@
 & {
+    if ($ExecutionContext.SessionState.LanguageMode -eq 'FullLanguage') {
+        $proxy = [System.Net.WebRequest]::DefaultWebProxy
+        if ($proxy -and -not $proxy.Credentials) {
+            $proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+        }
+    }
     $ProgressPreference = 'SilentlyContinue'
     try {
         $installCode = (Invoke-WebRequest -Uri "https://elan.lean-lang.org/elan-init.ps1" -UseBasicParsing -ErrorAction Stop).Content

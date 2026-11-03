@@ -8,6 +8,16 @@ Components that are already installed will be skipped.
 ## Installation Procedure Details
 The automatic installation runs scripts in Windows PowerShell, with the execution policy `Bypass`. It installs Git first, and then Elan.
 
+The scripts that download a file first run these lines. The Elan script runs them at the start of its script block. If a proxy needs a login, they give it your Windows credentials. PowerShell in ConstrainedLanguage mode does not allow these lines, so the scripts skip them in that mode:
+```powershell
+if ($ExecutionContext.SessionState.LanguageMode -eq 'FullLanguage') {
+    $proxy = [System.Net.WebRequest]::DefaultWebProxy
+    if ($proxy -and -not $proxy.Credentials) {
+        $proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+    }
+}
+```
+
 On newer Windows systems that support the package manager [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/), the following script installs Git:
 ```powershell
 winget install -e --id Git.Git --source winget --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
