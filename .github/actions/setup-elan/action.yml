@@ -30,9 +30,11 @@ runs:
         HOME_OVERRIDE="$GITHUB_WORKSPACE/.lean4-test-home"
         mkdir -p "$HOME_OVERRIDE"
         touch "$HOME_OVERRIDE/.lean4-test-home"
+        # `pipefail` makes a failed download fail the step, as in the extension.
+        # The new `bash` does not get it from the `bash` of this step.
         if [ ! -x "$HOME_OVERRIDE/.elan/bin/elan" ]; then
           HOME="$HOME_OVERRIDE" ELAN_HOME="$HOME_OVERRIDE/.elan" \
-            bash vscode-lean4/scripts/elan-install/install-unix.sh
+            bash -o pipefail vscode-lean4/scripts/elan-install/install-unix.sh
         fi
         echo "$HOME_OVERRIDE/.elan/bin" >> "$GITHUB_PATH"
 

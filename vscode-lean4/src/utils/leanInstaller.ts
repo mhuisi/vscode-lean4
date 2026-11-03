@@ -19,6 +19,8 @@ import {
     displayStickyNotificationWithOptionalInput,
 } from './notifs'
 // The CI action `setup-elan` runs the same scripts.
+// `install-unix.sh` has no comments, because the user can paste it into a terminal
+// (`manualScript`), and an interactive zsh does not accept comments.
 import unixInstallationScript from '../../scripts/elan-install/install-unix.sh'
 import windowsInstallationScript from '../../scripts/elan-install/install-windows.ps1'
 
@@ -35,7 +37,11 @@ export function elanInstallationMethod(): ElanInstallationMethod {
         }
     }
     return {
-        script: unixInstallationScript,
+        // If the download fails, `sh` reads no input and exits with 0. Only `pipefail` makes the
+        // installation fail then. The manual script does not set it: the option stays set in the
+        // terminal of the user, and fish does not accept `set -o`. In a terminal, the user sees the
+        // error of `curl`.
+        script: 'set -o pipefail\n' + unixInstallationScript,
         manualScript: unixInstallationScript,
         shell: 'Unix',
     }
