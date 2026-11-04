@@ -6,33 +6,53 @@ The following components are automatically installed when clicking [this link](c
 Components that are already installed will be skipped.
 
 ## Installation Procedure Details
-The automatic installation will run a script to install Elan and Git. 
+The automatic installation runs scripts in Windows PowerShell, with the execution policy `Bypass`. It installs Git first, and then Elan.
 
-On newer Windows systems that support the package manager [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/), the following script will be executed:
+On newer Windows systems that support the package manager [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/), the following script installs Git:
 ```powershell
-# Install Git using `winget`.
 winget install -e --id Git.Git --source winget --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
-# Download the Elan installation script at https://github.com/leanprover/elan/blob/master/elan-init.ps1 and run it. Elan will be installed to `%USERPROFILE%\.elan`.
-$installCode = (Invoke-WebRequest -Uri "https://elan.lean-lang.org/elan-init.ps1" -UseBasicParsing -ErrorAction Stop).Content
-$installer = [ScriptBlock]::Create([System.Text.Encoding]::UTF8.GetString($installCode))
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
-& $installer -NoPrompt 1 -DefaultToolchain ${elanStableChannel}
 ```
 
-On older Windows systems that do not support the package manager [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/), the following script will be executed instead:
+On older Windows systems that do not support the package manager [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/), the following script installs Git instead:
 ```powershell
-# Install Git by downloading the installer from https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe and running it.
+# Without a progress display, the download is much faster.
+$ProgressPreference = 'SilentlyContinue'
+# Download the Git installer to `%TEMP%\lean4-vscode-extension`, run it, and wait until it is done.
 $gitInstallerUrl = "https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe"
-$installDir = "%TEMP%\lean4-vscode-extension"
-$gitInstallerLoc = "$installDir\GitInstaller.exe"
-New-Item -ItemType Directory -Path $installDir -Force
-Invoke-WebRequest -Uri $gitInstallerUrl -OutFile $gitInstallerLoc
-& $gitInstallerLoc /VERYSILENT /NORESTART /SP-
+$installDir = Join-Path $env:TEMP "lean4-vscode-extension"
+$gitInstallerLoc = Join-Path $installDir "GitInstaller.exe"
+try {
+    New-Item -ItemType Directory -Path $installDir -Force -ErrorAction Stop | Out-Null
+    Invoke-WebRequest -Uri $gitInstallerUrl -OutFile $gitInstallerLoc -ErrorAction Stop
+    $installer = Start-Process -FilePath $gitInstallerLoc -ArgumentList '/VERYSILENT', '/NORESTART', '/SP-' -Wait -PassThru -ErrorAction Stop
+} catch {
+    Write-Host "Downloading or starting the Git installer failed."
+    Write-Host $_
+    exit 1
+}
+if ($installer.ExitCode -ne 0) {
+    Write-Host "The Git installer failed with exit code $($installer.ExitCode)."
+}
+exit $installer.ExitCode
+```
+
+Then the following script installs Elan:
+```powershell
+# Without a progress display, the downloads are much faster.
+$ProgressPreference = 'SilentlyContinue'
 # Download the Elan installation script at https://github.com/leanprover/elan/blob/master/elan-init.ps1 and run it. Elan will be installed to `%USERPROFILE%\.elan`.
-$installCode = (Invoke-WebRequest -Uri "https://elan.lean-lang.org/elan-init.ps1" -UseBasicParsing -ErrorAction Stop).Content
-$installer = [ScriptBlock]::Create([System.Text.Encoding]::UTF8.GetString($installCode))
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
-& $installer -NoPrompt 1 -DefaultToolchain ${elanStableChannel}
+try {
+    $installCode = (Invoke-WebRequest -Uri "https://elan.lean-lang.org/elan-init.ps1" -UseBasicParsing -ErrorAction Stop).Content
+    $installer = [ScriptBlock]::Create([System.Text.Encoding]::UTF8.GetString($installCode))
+    $rc = & $installer -NoPrompt 1 -DefaultToolchain leanprover/lean4:stable
+} catch {
+    Write-Host "Downloading and running the Elan installer failed."
+    Write-Host $_
+    $rc = 1
+}
+if ($rc -ne 0) {
+    throw "The installation of Elan failed."
+}
 ```
 
 ## Restricted Environments

@@ -14,6 +14,8 @@ On Linux systems that support the package manager `apt` (e.g. Debian or Ubuntu),
 # Install Git and curl. `pkexec` is used to display a secure graphical input for your credentials.
 ulimit -Sn 1024; pkexec bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update -y && apt-get install -y git curl'
 # Download the Elan installation script at https://github.com/leanprover/elan/blob/master/elan-init.sh using `curl` and run it using `sh`. Elan will be installed to `~/.elan`.
+# `set -o pipefail` makes the installation fail if the download fails.
+set -o pipefail
 curl "https://elan.lean-lang.org/elan-init.sh" -sSf | sh -s -- -y --default-toolchain leanprover/lean4:stable
 ```
 
@@ -22,6 +24,8 @@ On Linux systems that support the package manager `dnf` (e.g. Fedora), the follo
 # Install Git and curl. `pkexec` is used to display a secure graphical input for your credentials.
 pkexec dnf install -y git curl
 # Download the Elan installation script at https://github.com/leanprover/elan/blob/master/elan-init.sh using `curl` and run it using `sh`. Elan will be installed to `~/.elan`.
+# `set -o pipefail` makes the installation fail if the download fails.
+set -o pipefail
 curl "https://elan.lean-lang.org/elan-init.sh" -sSf | sh -s -- -y --default-toolchain leanprover/lean4:stable
 ```
 
