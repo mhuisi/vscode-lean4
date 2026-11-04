@@ -76,19 +76,25 @@ export function depInstallationLocations(): string[] {
     return []
 }
 
+// The Git installer is a GUI program (also with `/VERYSILENT`). PowerShell does not wait for a GUI
+// program that it starts with `&`, and does not set `$LASTEXITCODE` for it. Thus we start the
+// installer with `Start-Process -Wait`, and exit with its exit code.
 const windowsRawGitInstallScript = `$gitInstallerUrl = "https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe"
 $installDir = Join-Path $env:TEMP "lean4-vscode-extension"
 $gitInstallerLoc = Join-Path $installDir "GitInstaller.exe"
 try {
     New-Item -ItemType Directory -Path $installDir -Force -ErrorAction Stop | Out-Null
     Invoke-WebRequest -Uri $gitInstallerUrl -OutFile $gitInstallerLoc -ErrorAction Stop
-    & $gitInstallerLoc /VERYSILENT /NORESTART /SP-
+    $installer = Start-Process -FilePath $gitInstallerLoc -ArgumentList '/VERYSILENT', '/NORESTART', '/SP-' -Wait -PassThru -ErrorAction Stop
 } catch {
     Write-Host "Downloading or starting the Git installer failed."
     Write-Host $_
     exit 1
 }
-exit $LASTEXITCODE`
+if ($installer.ExitCode -ne 0) {
+    Write-Host "The Git installer failed with exit code $($installer.ExitCode)."
+}
+exit $installer.ExitCode`
 
 const macOsInstallScript = `set -e
 touch "/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
