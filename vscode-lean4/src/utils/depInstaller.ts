@@ -77,11 +77,17 @@ export function depInstallationLocations(): string[] {
 }
 
 const windowsRawGitInstallScript = `$gitInstallerUrl = "https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe"
-$installDir = "%TEMP%\\lean4-vscode-extension"
-$gitInstallerLoc = "$installDir\\GitInstaller.exe"
-New-Item -ItemType Directory -Path $installDir -Force
-Invoke-WebRequest -Uri $gitInstallerUrl -OutFile $gitInstallerLoc
-& $gitInstallerLoc /VERYSILENT /NORESTART /SP-
+$installDir = Join-Path $env:TEMP "lean4-vscode-extension"
+$gitInstallerLoc = Join-Path $installDir "GitInstaller.exe"
+try {
+    New-Item -ItemType Directory -Path $installDir -Force -ErrorAction Stop | Out-Null
+    Invoke-WebRequest -Uri $gitInstallerUrl -OutFile $gitInstallerLoc -ErrorAction Stop
+    & $gitInstallerLoc /VERYSILENT /NORESTART /SP-
+} catch {
+    Write-Host "Downloading or starting the Git installer failed."
+    Write-Host $_
+    exit 1
+}
 exit $LASTEXITCODE`
 
 const macOsInstallScript = `set -e
