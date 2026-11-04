@@ -18,9 +18,8 @@ import {
     displayNotificationWithInput,
     displayStickyNotificationWithOptionalInput,
 } from './notifs'
-// The CI action `setup-elan` runs the same scripts.
-// `install-unix.sh` has no comments, because the user can paste it into a terminal
-// (`manualScript`), and an interactive zsh does not accept comments.
+// The CI action `setup-elan` runs the same scripts. Users see the scripts, so they have no comments.
+// `scripts/installation-scripts.md` has the notes about them.
 import unixInstallationScript from '../../scripts/elan-install/install-unix.sh'
 import windowsInstallationScript from '../../scripts/elan-install/install-windows.ps1'
 
