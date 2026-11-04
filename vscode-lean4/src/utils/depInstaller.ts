@@ -79,7 +79,10 @@ export function depInstallationLocations(): string[] {
 // The Git installer is a GUI program (also with `/VERYSILENT`). PowerShell does not wait for a GUI
 // program that it starts with `&`, and does not set `$LASTEXITCODE` for it. Thus we start the
 // installer with `Start-Process -Wait`, and exit with its exit code.
-const windowsRawGitInstallScript = `$gitInstallerUrl = "https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe"
+// With a progress display, `Invoke-WebRequest` of Windows PowerShell 5.1 downloads the installer
+// (about 60 MB) much more slowly.
+const windowsRawGitInstallScript = `$ProgressPreference = 'SilentlyContinue'
+$gitInstallerUrl = "https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe"
 $installDir = Join-Path $env:TEMP "lean4-vscode-extension"
 $gitInstallerLoc = Join-Path $installDir "GitInstaller.exe"
 try {
