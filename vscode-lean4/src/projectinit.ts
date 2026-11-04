@@ -259,7 +259,7 @@ export class ProjectInitializationProvider implements Disposable {
             { combined: this.channel },
         )
         if (gitCommitResult.exitCode !== ExecutionExitCode.Success) {
-            displayResultError(gitAddResult, 'Cannot commit files to Git repository for project.')
+            displayResultError(gitCommitResult, 'Cannot commit files to Git repository for project.')
             return 'GitCommitFailed'
         }
 
