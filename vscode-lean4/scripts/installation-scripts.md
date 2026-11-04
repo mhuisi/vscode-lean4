@@ -12,7 +12,8 @@ Users see these scripts. The output channel "Lean: Editor" shows each script tha
 ## `elan-install/install-windows.ps1`
 
 - A user can paste this script into a terminal (`manualScript` in `src/utils/leanInstaller.ts`). There, `exit` closes the terminal. Thus a failure ends the script with `throw`. In a terminal, PowerShell shows the error, and `powershell -Command` ends with exit code 1.
-- With a progress display, `Invoke-WebRequest` of Windows PowerShell 5.1 downloads much more slowly. Thus the script sets `$ProgressPreference` to `SilentlyContinue`. `elan-init.ps1` also downloads Elan with `Invoke-WebRequest`, and it uses this value too.
+- The manual script must not change the PowerShell session of the user. Thus the script runs in a script block (`& { ... }`). `$ProgressPreference` and the variables of the script stay in the scope of the script block. A `throw` in the script block ends the script as before.
+- With a progress display, `Invoke-WebRequest` of Windows PowerShell 5.1 downloads much more slowly. Thus the script sets `$ProgressPreference` to `SilentlyContinue`. `elan-init.ps1` also downloads Elan with `Invoke-WebRequest`. It runs in a child scope of the script block, so it uses this value too.
 - `elan-init.ps1` returns 0 or 1. The script uses only the last output of `elan-init.ps1` (`Select-Object -Last 1`). We do not pin `elan-init.ps1`, and a later version can write more objects to the pipeline. Then `$rc` is an array, and `$rc -ne 0` is true when the array contains a value other than 0.
 
 ## `elan-install/install-unix.sh`

@@ -38,20 +38,23 @@ exit $installer.ExitCode
 
 Then the following script installs Elan:
 ```powershell
-# Without a progress display, the downloads are much faster.
-$ProgressPreference = 'SilentlyContinue'
-# Download the Elan installation script at https://github.com/leanprover/elan/blob/master/elan-init.ps1 and run it. Elan will be installed to `%USERPROFILE%\.elan`.
-try {
-    $installCode = (Invoke-WebRequest -Uri "https://elan.lean-lang.org/elan-init.ps1" -UseBasicParsing -ErrorAction Stop).Content
-    $installer = [ScriptBlock]::Create([System.Text.Encoding]::UTF8.GetString($installCode))
-    $rc = & $installer -NoPrompt 1 -DefaultToolchain leanprover/lean4:stable | Select-Object -Last 1
-} catch {
-    Write-Host "Downloading and running the Elan installer failed."
-    Write-Host $_
-    $rc = 1
-}
-if ($rc -ne 0) {
-    throw "The installation of Elan failed."
+# The script block keeps the settings and variables of the script out of your PowerShell session.
+& {
+    # Without a progress display, the downloads are much faster.
+    $ProgressPreference = 'SilentlyContinue'
+    # Download the Elan installation script at https://github.com/leanprover/elan/blob/master/elan-init.ps1 and run it. Elan will be installed to `%USERPROFILE%\.elan`.
+    try {
+        $installCode = (Invoke-WebRequest -Uri "https://elan.lean-lang.org/elan-init.ps1" -UseBasicParsing -ErrorAction Stop).Content
+        $installer = [ScriptBlock]::Create([System.Text.Encoding]::UTF8.GetString($installCode))
+        $rc = & $installer -NoPrompt 1 -DefaultToolchain leanprover/lean4:stable | Select-Object -Last 1
+    } catch {
+        Write-Host "Downloading and running the Elan installer failed."
+        Write-Host $_
+        $rc = 1
+    }
+    if ($rc -ne 0) {
+        throw "The installation of Elan failed."
+    }
 }
 ```
 
