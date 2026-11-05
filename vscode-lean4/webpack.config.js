@@ -175,6 +175,11 @@ const getExtensionConfig = env => ({
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },
+            {
+                // The elan install scripts, as strings (`src/utils/leanInstaller.ts`).
+                test: /\.(sh|ps1)$/,
+                type: 'asset/source',
+            },
         ],
     },
     resolve: {
