@@ -1033,7 +1033,7 @@ export class InfoProvider implements Disposable {
             <head>
                 <meta charset="UTF-8" />
                 <meta http-equiv="Content-type" content="text/html;charset=utf-8">
-                <title>Infoview</title>
+                <title>InfoView</title>
                 <style>${this.stylesheet}</style>
                 <link rel="stylesheet" href="${this.getLocalPath('dist/lean4-infoview/index.css')}">
             </head>

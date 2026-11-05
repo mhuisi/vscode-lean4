@@ -154,6 +154,7 @@ const MessageView = React.memo(({ uri, diag }: MessageViewProps) => {
                                 }
                             }}
                             title={isSearchWidgetDisplayed ? 'Hide search' : 'Show search'}
+                            data-id={isSearchWidgetDisplayed ? 'hide-trace-search' : 'show-trace-search'}
                         ></a>
                     )}
                 </span>
@@ -454,6 +455,7 @@ export function AllMessages({ uri: uri0 }: { uri: DocumentUri }) {
                                 setPaused(p => !p)
                             }}
                             title={isPaused ? "Unpause 'All Messages'" : "Pause 'All Messages'"}
+                            data-id={isPaused ? 'unpause-all-messages' : 'pause-all-messages'}
                         ></a>
                     </span>
                 </>
