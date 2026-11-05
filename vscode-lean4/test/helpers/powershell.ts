@@ -6,7 +6,8 @@ import * as path from 'node:path'
 // CI, the step shell `pwsh` sets `PSModulePath` to the module folders of
 // PowerShell 7, and Windows PowerShell then cannot load its own modules
 // (`withoutPSModulePath` in `src/utils/envPath.ts` explains this).
-export function windowsPowerShell(args: string[]): void {
+// Returns the standard output.
+export function windowsPowerShell(args: string[]): string {
     const exe = path.win32.join(
         process.env.windir || process.env.SystemRoot || 'C:\\Windows',
         'System32',
@@ -18,5 +19,20 @@ export function windowsPowerShell(args: string[]): void {
     const env = Object.fromEntries(
         Object.entries(process.env).filter(([name]) => name.toLowerCase() !== 'psmodulepath'),
     )
-    execFileSync(exe, ['-NoProfile', '-NonInteractive', ...args], { env, stdio: ['ignore', 'pipe', 'pipe'] })
+    return execFileSync(exe, ['-NoProfile', '-NonInteractive', ...args], {
+        env,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        encoding: 'utf8',
+    })
+}
+
+// Runs the PowerShell script `script` with `windowsPowerShell`, and returns the
+// standard output. `-EncodedCommand` prevents quoting problems.
+export function windowsPowerShellScript(script: string): string {
+    return windowsPowerShell(['-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')])
+}
+
+// Returns `s` as a PowerShell string literal in single quotes.
+export function psSingleQuote(s: string): string {
+    return `'${s.replace(/'/g, "''")}'`
 }

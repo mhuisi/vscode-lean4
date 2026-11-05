@@ -140,10 +140,11 @@ The tests in `vscode-test-cli/`, `network/`, `wdio/` and `helpers/` run in VS Co
 | `lake.lake(cwd, args, timeoutMs)` | Run `lake` without a block of the extension host. The error contains stdout and stderr. |
 | `testHome.requireIsolatedTestHome({ requireElanHome })` | Make sure that the test home is isolated before a test changes elan state. |
 | `testHome.makeTestWorkDir(prefix)` | Make a scratch folder in the test home. |
-| `mockToolchain.withMockToolchain(name, { leanVersion }, fn)` | Link a mock toolchain whose `lean` prints the given version. |
+| `mockToolchain.withMockToolchain(name, { leanVersion }, fn)` | Link a mock toolchain whose `lean` prints the given version. If the extension starts a server from it, wait in `fn` until the server ended (see `preconditions.test.ts`). On Windows, the removal stops the programs that still run from the toolchain, and logs them. |
 | `mockToolchain.withLinkedToolchain(name, target, fn)` | Link an installed toolchain folder under another name. |
 | `git.git(cwd, ...args)`, `gitText`, `initGitRepo(dir)` | Run git without the global and system git configuration. |
-| `powershell.windowsPowerShell(args)` | On Windows, run Windows PowerShell in the same state as the extension: full path, no profiles, no `PSModulePath`. |
+| `powershell.windowsPowerShell(args)`, `windowsPowerShellScript(script)` | On Windows, run Windows PowerShell in the same state as the extension: full path, no profiles, no `PSModulePath`. Returns the standard output. |
+| `fs.rmSync(target)`, `rmAsync(target, timeoutMs)` | Remove a folder with retries for Windows locks. Use `rmAsync` for programs that the extension can still run. After `timeoutMs`, it throws the error of the last attempt, which names the locked file. |
 | `windowsUserPath.removeTestElanFromWindowsUserPath()` | On Windows, remove `<test home>\.elan\bin` from the PATH of the user in the registry, after a test that installs elan. |
 | `timeouts.*` | Shared timeouts, `pollFor` and `withTimeout`. |
 | `typing.typeChars(text)`, `backspace`, `waitForText`, `expectTextSettles` | Type into the active editor and check the text, for the abbreviation tests. |

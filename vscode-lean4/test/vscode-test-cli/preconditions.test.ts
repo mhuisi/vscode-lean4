@@ -5,22 +5,31 @@ import { activateExtension } from '../helpers/activation'
 import { openInEditor, showInEditor } from '../helpers/editors'
 import { FIXTURES, assertNotInProject, scaffoldFromFixture } from '../helpers/fixtures'
 import { MOCK_TOOLCHAIN_REMOVAL_TIMEOUT_MS, withMockToolchain } from '../helpers/mockToolchain'
-import { CaptureOptions, dismiss, waitForPrompt, withPrompts } from '../helpers/prompts'
+import { CaptureOptions, PromptLog, dismiss, waitForPrompt, withPrompts } from '../helpers/prompts'
 import { afterEachReset } from '../helpers/teardown'
 import { withTimeout } from '../helpers/timeouts'
 
 const PROMPT_TIMEOUT_MS = 60_000
 // Opening a file usually takes less than a second.
 const OPEN_TIMEOUT_MS = 30_000
+// A mock server ends at once, so the client usually stops in less than a second.
+const SERVER_STOP_TIMEOUT_MS = 30_000
 
-// Runs `open` and waits for the prompt that matches `message`. Any other
-// prompt fails the test, unless `dismissRemaining` is set.
-async function expectPromptOnOpen(open: () => Promise<unknown>, message: RegExp, options: CaptureOptions = {}) {
+// Runs `open` and waits for the prompt that matches `message`. Then it runs
+// `after` with the same prompt stubs and log. Any other prompt fails the test,
+// unless `dismissRemaining` is set.
+async function expectPromptOnOpen(
+    open: () => Promise<unknown>,
+    message: RegExp,
+    options: CaptureOptions = {},
+    after?: (log: PromptLog[]) => Promise<unknown>,
+) {
     await withPrompts(
         [dismiss(message)],
         async ({ log }) => {
             await withTimeout(open(), OPEN_TIMEOUT_MS, 'the editor of the file')
             await waitForPrompt(log, p => message.test(p.message), PROMPT_TIMEOUT_MS, String(message))
+            await after?.(log)
         },
         options,
     )
@@ -29,7 +38,9 @@ async function expectPromptOnOpen(open: () => Promise<unknown>, message: RegExp,
 describe('Setup preconditions', function () {
     // Each step has its own timeout, which names the step. The timeout of the
     // test is longer than the sum of the steps, so that the step timeout fires first.
-    this.timeout(OPEN_TIMEOUT_MS + PROMPT_TIMEOUT_MS + MOCK_TOOLCHAIN_REMOVAL_TIMEOUT_MS + 30_000)
+    this.timeout(
+        OPEN_TIMEOUT_MS + PROMPT_TIMEOUT_MS + SERVER_STOP_TIMEOUT_MS + MOCK_TOOLCHAIN_REMOVAL_TIMEOUT_MS + 30_000,
+    )
 
     before(activateExtension)
 
@@ -91,14 +102,29 @@ describe('Setup preconditions', function () {
             { leanVersion: 'Lean (version 4.0.0-rc1, commit deadbeef, Release)' },
             async () => {
                 const projectDir = scaffoldFromFixture('mock-ancient-lean4-project', 'ancient-')
+                // A pre-4.0 version is not fatal, so the extension starts a server.
+                // The fixture has no lakefile, so the server is `lean --server` of the
+                // mock toolchain. The mock `lean` only prints its version, so the
+                // server fails, and the extension shows several error prompts about it.
+                // `withMockToolchain` must remove the toolchain only after the server
+                // ended: on Windows, a running program cannot be deleted. The prompt
+                // "Lean Server has stopped" comes after the connection to the server
+                // closed. The extension has no event for this that a test can get in
+                // time: if no Lean file was open, the client starts before
+                // `lean4EnabledFeatures` resolves. Also, `serverFailed` does not fire:
+                // `start()` of `vscode-languageclient` 9 resolves if the server ends
+                // during the start.
                 await expectPromptOnOpen(
                     () => openInEditor(Uri.file(path.join(projectDir, 'Main.lean'))),
                     /^Opened project is using a Lean 4 version \(4\.0\.0-rc1\) from before the first Lean 4 stable release/,
-                    // A pre-4.0 version is not fatal, so the extension starts a server.
-                    // The fixture has no lakefile, so the server is `lean --server` of the
-                    // mock toolchain. The mock `lean` only prints its version, so the
-                    // server fails, and the extension shows several error prompts about it.
                     { dismissRemaining: true },
+                    log =>
+                        waitForPrompt(
+                            log,
+                            p => /^Lean Server has stopped unexpectedly\./.test(p.message),
+                            SERVER_STOP_TIMEOUT_MS,
+                            'the prompt about the stop of the mock Lean server',
+                        ),
                 )
             },
         )

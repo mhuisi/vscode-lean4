@@ -9,11 +9,29 @@ export function rmSync(target: string, options?: fs.RmOptions): void {
     fs.rmSync(target, { recursive: true, force: true, maxRetries: 10, retryDelay: 100, ...options })
 }
 
-// Like `rmSync`, but asynchronous, and the retries wait up to about 30 s. Use it
+// The error codes of `fs.promises.rm` that Node.js retries with `maxRetries`.
+const RM_RETRY_CODES = new Set(['EBUSY', 'EMFILE', 'ENFILE', 'ENOTEMPTY', 'EPERM'])
+
+// Like `rmSync`, but asynchronous, and the retries wait up to `timeoutMs`. Use it
 // for a folder with programs that the extension can still run, for example a
 // mock toolchain or ELAN_HOME. `rmSync` blocks the extension host while it
 // waits, so the extension cannot process the end of these programs.
-export async function rmAsync(target: string): Promise<void> {
-    // Node.js waits `retryDelay` longer before each retry: 100 ms, 200 ms, ..., 2.4 s.
-    await fs.promises.rm(target, { recursive: true, force: true, maxRetries: 24, retryDelay: 100 })
+// After the timeout, it throws the error of the last attempt. This error names
+// the file that is locked.
+export async function rmAsync(target: string, timeoutMs: number = 30_000): Promise<void> {
+    // We do not use `maxRetries` of Node.js: Node.js uses it again for each
+    // subfolder, so a lock that does not end makes the wait much longer.
+    const deadline = Date.now() + timeoutMs
+    for (let delay = 100; ; delay = Math.min(2 * delay, 2000)) {
+        try {
+            await fs.promises.rm(target, { recursive: true, force: true })
+            return
+        } catch (e) {
+            const code = (e as NodeJS.ErrnoException).code
+            if (code === undefined || !RM_RETRY_CODES.has(code) || Date.now() + delay > deadline) {
+                throw e
+            }
+        }
+        await new Promise(resolve => setTimeout(resolve, delay))
+    }
 }
