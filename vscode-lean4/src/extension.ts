@@ -22,7 +22,7 @@ import { combine, onEventWhile, withoutReentrancy } from './utils/events'
 import { ExtUri, extUriToCwdUri, FileUri, toExtUri } from './utils/exturi'
 import { FullInstaller } from './utils/fullInstaller'
 import { displayInternalErrorsIn } from './utils/internalErrors'
-import { registerLeanCommandRunner } from './utils/leanCmdRunner'
+import { leanRunner, registerLeanCommandRunner } from './utils/leanCmdRunner'
 import { isLeanDocument, lean, registerLeanEditorProviders, text } from './utils/leanEditorProvider'
 import { LeanInstaller } from './utils/leanInstaller'
 import { ModuleTreeViewProvider } from './utils/moduleTreeViewProvider'
@@ -214,6 +214,7 @@ function activateAlwaysEnabledFeatures(context: ExtensionContext): AlwaysEnabled
         depInstaller,
         fullDiagnosticsProvider,
         elanCommandProvider,
+        leanCommandRunner: leanRunner,
     }
 }
 

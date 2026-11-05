@@ -6,6 +6,7 @@ import { ProjectOperationProvider } from './projectoperations'
 import { LeanClientProvider } from './utils/clientProvider'
 import { DepInstaller } from './utils/depInstaller'
 import { ElanCommandProvider } from './utils/elanCommands'
+import { LeanCommandRunner } from './utils/leanCmdRunner'
 import { LeanInstaller } from './utils/leanInstaller'
 
 export interface AlwaysEnabledFeatures {
@@ -15,6 +16,7 @@ export interface AlwaysEnabledFeatures {
     depInstaller: DepInstaller
     fullDiagnosticsProvider: FullDiagnosticsProvider
     elanCommandProvider: ElanCommandProvider
+    leanCommandRunner: LeanCommandRunner
 }
 
 export interface Lean4EnabledFeatures {

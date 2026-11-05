@@ -162,7 +162,7 @@ export class LeanClient implements Disposable {
     private subscriptions: Disposable[] = []
     private noPrompt: boolean = false
     private showingRestartMessage: boolean = false
-    private isRestarting: boolean = false
+    private restartInProgress: boolean = false
     private staleDepNotifier: Disposable | undefined
     private configFileContents: Map<string, string> = new Map()
 
@@ -457,11 +457,11 @@ export class LeanClient implements Disposable {
     }
 
     async restart(): Promise<void> {
-        if (this.isRestarting) {
+        if (this.restartInProgress) {
             displayNotification('Error', 'Client is already being started.')
             return
         }
-        this.isRestarting = true
+        this.restartInProgress = true
         try {
             let defaultToolchain: string | undefined
             if (this.folderUri.scheme === 'untitled') {
@@ -503,7 +503,7 @@ export class LeanClient implements Disposable {
                 async progress => await this.startClient(progress, defaultToolchain),
             )
         } finally {
-            this.isRestarting = false
+            this.restartInProgress = false
         }
     }
 
@@ -692,10 +692,10 @@ export class LeanClient implements Disposable {
     async withStoppedClient<T>(
         action: () => Promise<T>,
     ): Promise<{ kind: 'Success'; result: T } | { kind: 'IsRestarting' }> {
-        if (this.isRestarting) {
+        if (this.restartInProgress) {
             return { kind: 'IsRestarting' }
         }
-        this.isRestarting = true // Ensure that client cannot be restarted in the mean-time
+        this.restartInProgress = true // Ensure that client cannot be restarted in the mean-time
         let result: T
         try {
             if (this.isStarted()) {
@@ -703,7 +703,7 @@ export class LeanClient implements Disposable {
             }
             result = await action()
         } finally {
-            this.isRestarting = false
+            this.restartInProgress = false
         }
         await this.restart()
         return { kind: 'Success', result }
@@ -729,6 +729,11 @@ export class LeanClient implements Disposable {
 
     isStarted(): boolean {
         return this.client !== undefined
+    }
+
+    /** Whether `restart()` or a project action that stops the server is in progress. */
+    isRestarting(): boolean {
+        return this.restartInProgress
     }
 
     isRunning(): boolean {
