@@ -1,5 +1,6 @@
 import { LeanFileProgressProcessingInfo, ServerStoppedReason } from '@leanprover/infoview-api'
 import { Disposable, EventEmitter, OutputChannel, commands } from 'vscode'
+import { DidChangeTextDocumentParams, DidCloseTextDocumentParams } from 'vscode-languageclient/node'
 import { SetupDiagnostics, checkAll } from '../diagnostics/setupDiagnostics'
 import { PreconditionCheckResult, SetupNotificationOptions } from '../diagnostics/setupNotifs'
 import { FoldingRangesProvidedEvent, LeanClient } from '../leanclient'
@@ -47,6 +48,18 @@ export class LeanClientProvider implements Disposable {
 
     private didProvideFoldingRangesEmitter = new EventEmitter<FoldingRangesProvidedEvent>()
     didProvideFoldingRanges = this.didProvideFoldingRangesEmitter.event
+
+    private didChangeEmitter = new EventEmitter<DidChangeTextDocumentParams>()
+    /** Fires when any client sends `textDocument/didChange`. */
+    didChange = this.didChangeEmitter.event
+
+    private didCloseEmitter = new EventEmitter<DidCloseTextDocumentParams>()
+    /** Fires when any client sends `textDocument/didClose`. */
+    didClose = this.didCloseEmitter.event
+
+    private customNotificationEmitter = new EventEmitter<{ method: string; params: any }>()
+    /** Fires when any client receives a custom notification (i.e. one not defined in LSP). */
+    customNotification = this.customNotificationEmitter.event
 
     private clientAddedEmitter = new EventEmitter<LeanClient>()
     clientAdded = this.clientAddedEmitter.event
@@ -268,6 +281,18 @@ export class LeanClientProvider implements Disposable {
 
         client.didProvideFoldingRanges(e => {
             this.didProvideFoldingRangesEmitter.fire(e)
+        })
+
+        client.didChange(p => {
+            this.didChangeEmitter.fire(p)
+        })
+
+        client.didClose(p => {
+            this.didCloseEmitter.fire(p)
+        })
+
+        client.customNotification(n => {
+            this.customNotificationEmitter.fire(n)
         })
 
         // Fired before starting the client because the InfoView uses this to register

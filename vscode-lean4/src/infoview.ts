@@ -91,6 +91,36 @@ class RpcSessionAtPos implements Disposable {
     }
 }
 
+/**
+ * Adds a subscription to `method` to the counted `subscriptions`.
+ * Only the first subscription to a method calls `subscribe`.
+ */
+function subscribeCounted(
+    subscriptions: Map<string, [number, Disposable]>,
+    method: string,
+    subscribe: () => Disposable,
+): void {
+    const el = subscriptions.get(method)
+    if (el) {
+        subscriptions.set(method, [el[0] + 1, el[1]])
+        return
+    }
+    subscriptions.set(method, [1, subscribe()])
+}
+
+/** Removes a subscription to `method` from the counted `subscriptions`, and disposes of the last one. */
+function unsubscribeCounted(subscriptions: Map<string, [number, Disposable]>, method: string): void {
+    const el = subscriptions.get(method)
+    if (!el) throw new Error(`trying to unsubscribe from '${method}' with no active subscriptions`)
+    const [count, subscription] = el
+    if (count === 1) {
+        subscription.dispose()
+        subscriptions.delete(method)
+    } else {
+        subscriptions.set(method, [count - 1, subscription])
+    }
+}
+
 export class InfoProvider implements Disposable {
     /** Instance of the panel, if it is open. Otherwise `undefined`. */
     private webviewPanel?: WebviewPanel & { rpc: Rpc; api: InfoviewApi }
@@ -101,8 +131,8 @@ export class InfoProvider implements Disposable {
     private autoOpened: boolean = false
 
     // Subscriptions are counted and only disposed of when count becomes 0.
-    private serverNotifSubscriptions: Map<string, [number, Disposable[]]> = new Map()
-    private clientNotifSubscriptions: Map<string, [number, Disposable[]]> = new Map()
+    private serverNotifSubscriptions: Map<string, [number, Disposable]> = new Map()
+    private clientNotifSubscriptions: Map<string, [number, Disposable]> = new Map()
 
     private rpcSessions: Map<string, RpcSessionAtPos> = new Map()
 
@@ -118,35 +148,6 @@ export class InfoProvider implements Disposable {
      * Maps in-flight client request IDs (as in {@link freshClientRequestId})
      * to tuples [Response, Infoview subscription (should be disposed when infoview closes), Cancellation token]. */
     private clientRequests: Map<number, [Promise<any>, Disposable, CancellationTokenSource]> = new Map()
-
-    private subscribeDidChangeNotification(client: LeanClient, method: string) {
-        const h = client.didChange(params => {
-            void this.webviewPanel?.api.sentClientNotification(method, params)
-        })
-        return h
-    }
-
-    private subscribeDidCloseNotification(client: LeanClient, method: string) {
-        const h = client.didClose(params => {
-            void this.webviewPanel?.api.sentClientNotification(method, params)
-        })
-        return h
-    }
-
-    private subscribeDiagnosticsNotification(client: LeanClient, method: string) {
-        const h = client.diagnostics(params => {
-            void this.webviewPanel?.api.gotServerNotification(method, params)
-        })
-        return h
-    }
-
-    private subscribeCustomNotification(client: LeanClient, method: string) {
-        const h = client.customNotification(({ method: thisMethod, params }) => {
-            if (thisMethod !== method) return
-            void this.webviewPanel?.api.gotServerNotification(method, params)
-        })
-        return h
-    }
 
     private editorApi: EditorRpcApi = {
         saveConfig: async (config: InfoviewConfig) => {
@@ -246,83 +247,41 @@ export class InfoProvider implements Disposable {
             }
         },
         subscribeServerNotifications: async method => {
-            const el = this.serverNotifSubscriptions.get(method)
-            if (el) {
-                const [count, h] = el
-                this.serverNotifSubscriptions.set(method, [count + 1, h])
-                return
-            }
-
             // NOTE(WN): For non-custom notifications we cannot call LanguageClient.onNotification
             // here because that *overwrites* the notification handler rather than registers an extra one.
             // So we have to add a bunch of event emitters to `LeanClient.`
-            if (method === 'textDocument/publishDiagnostics') {
-                const subscriptions: Disposable[] = []
-                for (const client of this.clientProvider.getClients()) {
-                    subscriptions.push(this.subscribeDiagnosticsNotification(client, method))
+            subscribeCounted(this.serverNotifSubscriptions, method, () => {
+                const forward = (params: any) => void this.webviewPanel?.api.gotServerNotification(method, params)
+                if (method === 'textDocument/publishDiagnostics') {
+                    return this.clientProvider.diagnosticsChanged(forward)
                 }
-                this.serverNotifSubscriptions.set(method, [1, subscriptions])
-            } else if (method.startsWith('$')) {
-                const subscriptions: Disposable[] = []
-                for (const client of this.clientProvider.getClients()) {
-                    subscriptions.push(this.subscribeCustomNotification(client, method))
+                if (method.startsWith('$')) {
+                    return this.clientProvider.customNotification(n => {
+                        if (n.method === method) forward(n.params)
+                    })
                 }
-                this.serverNotifSubscriptions.set(method, [1, subscriptions])
-            } else {
                 throw new Error(`subscription to ${method} server notifications not implemented`)
-            }
+            })
         },
         unsubscribeServerNotifications: async method => {
-            const el = this.serverNotifSubscriptions.get(method)
-            if (!el) throw new Error(`trying to unsubscribe from '${method}' with no active subscriptions`)
-            const [count, subscriptions] = el
-            if (count === 1) {
-                for (const h of subscriptions) {
-                    h.dispose()
-                }
-                this.serverNotifSubscriptions.delete(method)
-            } else {
-                this.serverNotifSubscriptions.set(method, [count - 1, subscriptions])
-            }
+            unsubscribeCounted(this.serverNotifSubscriptions, method)
         },
 
         subscribeClientNotifications: async method => {
-            const el = this.clientNotifSubscriptions.get(method)
-            if (el) {
-                const [count, d] = el
-                this.clientNotifSubscriptions.set(method, [count + 1, d])
-                return
-            }
-
-            if (method === 'textDocument/didChange') {
-                const subscriptions: Disposable[] = []
-                for (const client of this.clientProvider.getClients()) {
-                    subscriptions.push(this.subscribeDidChangeNotification(client, method))
+            subscribeCounted(this.clientNotifSubscriptions, method, () => {
+                const forward = (params: any) => void this.webviewPanel?.api.sentClientNotification(method, params)
+                if (method === 'textDocument/didChange') {
+                    return this.clientProvider.didChange(forward)
                 }
-                this.clientNotifSubscriptions.set(method, [1, subscriptions])
-            } else if (method === 'textDocument/didClose') {
-                const subscriptions: Disposable[] = []
-                for (const client of this.clientProvider.getClients()) {
-                    subscriptions.push(this.subscribeDidCloseNotification(client, method))
+                if (method === 'textDocument/didClose') {
+                    return this.clientProvider.didClose(forward)
                 }
-                this.clientNotifSubscriptions.set(method, [1, subscriptions])
-            } else {
                 throw new Error(`Subscription to '${method}' client notifications not implemented`)
-            }
+            })
         },
 
         unsubscribeClientNotifications: async method => {
-            const el = this.clientNotifSubscriptions.get(method)
-            if (!el) throw new Error(`trying to unsubscribe from '${method}' with no active subscriptions`)
-            const [count, subscriptions] = el
-            if (count === 1) {
-                for (const d of subscriptions) {
-                    d.dispose()
-                }
-                this.clientNotifSubscriptions.delete(method)
-            } else {
-                this.clientNotifSubscriptions.set(method, [count - 1, subscriptions])
-            }
+            unsubscribeCounted(this.clientNotifSubscriptions, method)
         },
         copyToClipboard: async text => {
             await env.clipboard.writeText(text)
@@ -605,24 +564,6 @@ export class InfoProvider implements Disposable {
     }
 
     private async onClientRestarted(client: LeanClient) {
-        // if we already have subscriptions for a previous client, we need to also
-        // subscribe to the same things on this new client.
-        for (const [method, [count, subscriptions]] of this.clientNotifSubscriptions) {
-            if (method === 'textDocument/didChange') {
-                subscriptions.push(this.subscribeDidChangeNotification(client, method))
-            } else if (method === 'textDocument/didClose') {
-                subscriptions.push(this.subscribeDidCloseNotification(client, method))
-            }
-        }
-
-        for (const [method, [count, subscriptions]] of this.serverNotifSubscriptions) {
-            if (method === 'textDocument/publishDiagnostics') {
-                subscriptions.push(this.subscribeDiagnosticsNotification(client, method))
-            } else if (method.startsWith('$')) {
-                subscriptions.push(this.subscribeCustomNotification(client, method))
-            }
-        }
-
         await this.webviewPanel?.api.serverStopped(undefined) // clear any server stopped state
         const folderUri = client.getClientFolder()
         if (this.clientsFailed.has(folderUri.toString())) {
@@ -702,9 +643,9 @@ export class InfoProvider implements Disposable {
     }
 
     private clearNotificationHandlers() {
-        for (const [, [, subscriptions]] of this.clientNotifSubscriptions) for (const h of subscriptions) h.dispose()
+        for (const [, [, subscription]] of this.clientNotifSubscriptions) subscription.dispose()
         this.clientNotifSubscriptions.clear()
-        for (const [, [, subscriptions]] of this.serverNotifSubscriptions) for (const h of subscriptions) h.dispose()
+        for (const [, [, subscription]] of this.serverNotifSubscriptions) subscription.dispose()
         this.serverNotifSubscriptions.clear()
     }
 

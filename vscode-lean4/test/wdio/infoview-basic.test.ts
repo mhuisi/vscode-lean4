@@ -487,6 +487,27 @@ describe('InfoView', function () {
         )
     })
 
+    it('a pinned position moves once for each edit after a restart of the server', async () => {
+        await openFixtureFile('Pin.lean')
+        await moveCursorTo(2, 0)
+        await waitForInfoView(t => t.includes('[1, 2, 3]'), { label: 'the `#eval` result', timeout: 2 * 60_000 })
+        await pinCurrentPosition()
+
+        // The command returns when the new server runs.
+        await runCommand('lean4.restartServer')
+        await insertText(0, 0, '-- a\n-- b\n')
+        await moveCursorTo(5, 0)
+        await waitForInfoView(
+            t =>
+                t.includes('Pin.lean:5:0 (pinned)') &&
+                t.includes('Pin.lean:6:0') &&
+                t.includes('"second"') &&
+                t.includes('[1, 2, 3]') &&
+                !t.includes('Incorrect position'),
+            { label: 'the pinned result after the edit', timeout: 2 * 60_000 },
+        )
+    })
+
     it('a pinned position survives a switch to another file and back', async () => {
         await openFixtureFile('Pin.lean')
         await moveCursorTo(2, 0)
