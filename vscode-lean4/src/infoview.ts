@@ -1,4 +1,5 @@
 import {
+    ContextMenuEntry,
     InfoviewApi,
     InfoviewConfig,
     LeanFileProgressParams,
@@ -119,6 +120,45 @@ function unsubscribeCounted(subscriptions: Map<string, [number, Disposable]>, me
     } else {
         subscriptions.set(method, [count - 1, subscription])
     }
+}
+
+/**
+ * For each context menu entry of the InfoView, the argument of its command `lean4.infoview.<entry>`
+ * that contains the ID of the element that the user clicked.
+ */
+const contextMenuIdArgs: Record<ContextMenuEntry, string> = {
+    goToDefinition: 'interactiveCodeTagId',
+    select: 'selectableLocationId',
+    unselect: 'unselectableLocationId',
+    unselectAll: 'selectedLocationsId',
+    pause: 'pauseId',
+    unpause: 'unpauseId',
+    pin: 'pinId',
+    unpin: 'unpinId',
+    refresh: 'refreshId',
+    pauseAllMessages: 'pauseAllMessagesId',
+    unpauseAllMessages: 'unpauseAllMessagesId',
+    copyState: 'copyStateId',
+    copyMessage: 'copyMessageId',
+    goToPinnedLocation: 'goToPinnedLocationId',
+    goToMessageLocation: 'goToMessageLocationId',
+    hideTraceSearch: 'hideTraceSearchId',
+    showTraceSearch: 'showTraceSearchId',
+    displayTargetBeforeAssumptions: 'displayTargetBeforeAssumptionsId',
+    displayAssumptionsBeforeTarget: 'displayAssumptionsBeforeTargetId',
+    hideTypeAssumptions: 'hideTypeAssumptionsId',
+    showTypeAssumptions: 'showTypeAssumptionsId',
+    hideInstanceAssumptions: 'hideInstanceAssumptionsId',
+    showInstanceAssumptions: 'showInstanceAssumptionsId',
+    hideInaccessibleAssumptions: 'hideInaccessibleAssumptionsId',
+    showInaccessibleAssumptions: 'showInaccessibleAssumptionsId',
+    hideLetValues: 'hideLetValuesId',
+    showLetValues: 'showLetValuesId',
+    hideGoalNames: 'hideGoalNamesId',
+    showGoalNames: 'showGoalNamesId',
+    emphasizeFirstGoal: 'emphasizeFirstGoalId',
+    deemphasizeFirstGoal: 'deemphasizeFirstGoalId',
+    saveSettings: 'saveSettingsId',
 }
 
 export class InfoProvider implements Disposable {
@@ -404,163 +444,15 @@ export class InfoProvider implements Disposable {
             lean.registerLeanEditorCommand('lean4.infoView.toggleStickyPosition', () =>
                 this.webviewPanel?.api.requestedAction({ kind: 'togglePin' }),
             ),
-            commands.registerCommand('lean4.infoview.goToDefinition', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'goToDefinition', id: args.interactiveCodeTagId }),
-            ),
-            commands.registerCommand('lean4.infoview.select', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'select', id: args.selectableLocationId }),
-            ),
-            commands.registerCommand('lean4.infoview.unselect', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'unselect', id: args.unselectableLocationId }),
-            ),
-            commands.registerCommand('lean4.infoview.unselectAll', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'unselectAll', id: args.selectedLocationsId }),
-            ),
-            commands.registerCommand('lean4.infoview.pause', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'pause', id: args.pauseId }),
-            ),
-            commands.registerCommand('lean4.infoview.unpause', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'unpause', id: args.unpauseId }),
-            ),
-            commands.registerCommand('lean4.infoview.pin', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'pin', id: args.pinId }),
-            ),
-            commands.registerCommand('lean4.infoview.unpin', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'unpin', id: args.unpinId }),
-            ),
-            commands.registerCommand('lean4.infoview.refresh', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'refresh', id: args.refreshId }),
-            ),
-            commands.registerCommand('lean4.infoview.pauseAllMessages', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'pauseAllMessages',
-                    id: args.pauseAllMessagesId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.unpauseAllMessages', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'unpauseAllMessages',
-                    id: args.unpauseAllMessagesId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.copyState', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'copyState',
-                    id: args.copyStateId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.copyMessage', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'copyMessage',
-                    id: args.copyMessageId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.goToPinnedLocation', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'goToPinnedLocation',
-                    id: args.goToPinnedLocationId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.goToMessageLocation', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'goToMessageLocation',
-                    id: args.goToMessageLocationId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.hideTraceSearch', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'hideTraceSearch',
-                    id: args.hideTraceSearchId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.showTraceSearch', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'showTraceSearch',
-                    id: args.showTraceSearchId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.displayTargetBeforeAssumptions', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'displayTargetBeforeAssumptions',
-                    id: args.displayTargetBeforeAssumptionsId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.displayAssumptionsBeforeTarget', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'displayAssumptionsBeforeTarget',
-                    id: args.displayAssumptionsBeforeTargetId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.hideTypeAssumptions', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'hideTypeAssumptions',
-                    id: args.hideTypeAssumptionsId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.showTypeAssumptions', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'showTypeAssumptions',
-                    id: args.showTypeAssumptionsId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.hideInstanceAssumptions', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'hideInstanceAssumptions',
-                    id: args.hideInstanceAssumptionsId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.showInstanceAssumptions', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'showInstanceAssumptions',
-                    id: args.showInstanceAssumptionsId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.hideInaccessibleAssumptions', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'hideInaccessibleAssumptions',
-                    id: args.hideInaccessibleAssumptionsId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.showInaccessibleAssumptions', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'showInaccessibleAssumptions',
-                    id: args.showInaccessibleAssumptionsId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.hideLetValues', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'hideLetValues', id: args.hideLetValuesId }),
-            ),
-            commands.registerCommand('lean4.infoview.showLetValues', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'showLetValues', id: args.showLetValuesId }),
-            ),
-            commands.registerCommand('lean4.infoview.hideGoalNames', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'hideGoalNames',
-                    id: args.hideGoalNamesId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.showGoalNames', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'showGoalNames',
-                    id: args.showGoalNamesId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.emphasizeFirstGoal', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'emphasizeFirstGoal',
-                    id: args.emphasizeFirstGoalId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.deemphasizeFirstGoal', args =>
-                this.webviewPanel?.api.clickedContextMenu({
-                    entry: 'deemphasizeFirstGoal',
-                    id: args.deemphasizeFirstGoalId,
-                }),
-            ),
-            commands.registerCommand('lean4.infoview.saveSettings', args =>
-                this.webviewPanel?.api.clickedContextMenu({ entry: 'saveSettings', id: args.saveSettingsId }),
-            ),
         )
+
+        for (const [entry, idArg] of Object.entries(contextMenuIdArgs) as [ContextMenuEntry, string][]) {
+            this.subscriptions.push(
+                commands.registerCommand(`lean4.infoview.${entry}`, args =>
+                    this.webviewPanel?.api.clickedContextMenu({ entry, id: args[idArg] }),
+                ),
+            )
+        }
     }
 
     private async onClientRestarted(client: LeanClient) {
