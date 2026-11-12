@@ -94,7 +94,7 @@ class RpcSessionForFile {
             try {
                 return await sessions.iface.createRpcSession(uri)
             } catch (ex) {
-                this.failWithoutClosing(ex)
+                this.failWithoutClosing(ex, isWorkerStoppedError(ex))
                 throw ex
             }
         })()
@@ -173,19 +173,30 @@ class RpcSessionForFile {
         }
     }
 
-    private failWithoutClosing(reason: any): void {
+    /**
+     * Marks this session as failed.
+     * With `keepInSessions`, {@link RpcSessions.connect} keeps returning this session,
+     * so that its calls fail at once instead of creating new sessions.
+     */
+    private failWithoutClosing(reason: any, keepInSessions: boolean): void {
         this.failed = reason
         // NOTE(WN): the sessions map is keyed by URI rather than ID and by the time this
         // function executes, a new session for the same file may already have been added.
         // So we should only delete the stored session if it's still this one.
-        if (this.sessions.sessions.get(this.uri) === this) {
+        if (!keepInSessions && this.sessions.sessions.get(this.uri) === this) {
             this.sessions.sessions.delete(this.uri)
         }
     }
 
-    fail(reason: any) {
-        this.failWithoutClosing(reason)
-        void this.sessionId.then(id => this.sessions.iface.closeRpcSession(id))
+    fail(reason: any, keepInSessions: boolean = false) {
+        const wasFailed = !!this.failed
+        this.failWithoutClosing(reason, keepInSessions)
+        if (!wasFailed) {
+            void this.sessionId.then(
+                id => this.sessions.iface.closeRpcSession(id),
+                () => {}, // No session was created.
+            )
+        }
     }
 
     /**
@@ -214,11 +225,9 @@ class RpcSessionForFile {
             if (result === null) return undefined
             return result
         } catch (ex: any) {
-            if (
-                ex?.code === RpcErrorCode.WorkerCrashed ||
-                ex?.code === RpcErrorCode.WorkerExited ||
-                ex?.code === RpcErrorCode.RpcNeedsReconnect
-            ) {
+            if (isWorkerStoppedError(ex)) {
+                this.fail(ex, true)
+            } else if (ex?.code === RpcErrorCode.RpcNeedsReconnect) {
                 this.fail(ex)
             }
             throw ex
@@ -244,16 +253,27 @@ class RpcSessionForFile {
     }
 }
 
+/**
+ * Whether `ex` says that the file worker of the session has stopped.
+ * The Lean server only starts a new worker for the file when the file changes.
+ */
+function isWorkerStoppedError(ex: any): boolean {
+    return ex?.code === RpcErrorCode.WorkerCrashed || ex?.code === RpcErrorCode.WorkerExited
+}
+
 // Docstrings on exported types mention this type.
 export type { RpcSessionForFile }
 
 /** Manages RPC sessions for multiple files. */
 export class RpcSessions {
     /**
-     * Contains the active {@link RpcSessionForFile} objects.
-     * Once an {@link RpcSessionForFile} is set to failed (e.g. due to a server crash),
-     * it is removed from this map.
-     * The {@link connect} method will then automatically reconnect
+     * Contains the {@link RpcSessionForFile} objects that {@link connect} returns.
+     *
+     * When the file worker of a session stops (e.g. it crashes),
+     * the failed session stays in this map until {@link discardFailedSessionForFile} is called,
+     * so that its calls fail at once instead of creating a new session for the stopped worker.
+     * Any other failed {@link RpcSessionForFile} is removed from this map,
+     * and the {@link connect} method will then automatically reconnect
      * the next time it is called.
      */
     sessions: Map<DocumentUri, RpcSessionForFile> = new Map()
@@ -274,14 +294,25 @@ export class RpcSessions {
      * Returns an {@link RpcSessionAtPos} for the given document and position.
      * Calling {@link connect} multiple times will return the same
      * session (with the same session ID).
-     * A new session is only created if a fatal error occurs (the worker crashes)
-     * or the session is closed manually (the file is closed).
+     * A new session is only created if the session is closed manually (the file is closed),
+     * if the server asks for a reconnect,
+     * or if the file worker stopped and {@link discardFailedSessionForFile} was called since.
      */
     connect(
         pos: TextDocumentPositionParams,
         serverCapabilities: ServerCapabilities<LeanServerCapabilities>,
     ): RpcSessionAtPos {
         return this.connectCore(pos.textDocument.uri, serverCapabilities).at(pos.position)
+    }
+
+    /**
+     * Removes the session for the given URI if it failed,
+     * so that {@link connect} creates a new session the next time it is called.
+     * Call it when the file changes: the Lean server then starts a new file worker
+     * for a file whose worker stopped.
+     */
+    discardFailedSessionForFile(uri: DocumentUri): void {
+        if (this.sessions.get(uri)?.failed) this.sessions.delete(uri)
     }
 
     /** Closes the session for the given URI. */

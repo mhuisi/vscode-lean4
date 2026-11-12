@@ -1,6 +1,7 @@
 import { RpcCallParams, RpcReleaseParams, RpcSessionAtPos, RpcSessions } from '@leanprover/infoview-api'
 import * as React from 'react'
 import type {
+    DidChangeTextDocumentParams,
     DidCloseTextDocumentParams,
     DocumentUri,
     TextDocumentPositionParams,
@@ -31,6 +32,14 @@ export function WithRpcSessions({ children }: { children: React.ReactNode }) {
         // Clean up the sessions on unmount
         return () => sessions.dispose()
     }, [sessions])
+
+    useClientNotificationEffect(
+        'textDocument/didChange',
+        (params: DidChangeTextDocumentParams) => {
+            sessions.discardFailedSessionForFile(params.textDocument.uri)
+        },
+        [sessions],
+    )
 
     useClientNotificationEffect(
         'textDocument/didClose',
