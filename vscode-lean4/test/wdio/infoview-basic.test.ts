@@ -1,5 +1,7 @@
 /// <reference types="wdio-vscode-service" />
 import { browser, expect } from '@wdio/globals'
+import type { Exports } from '../../src/exports'
+import type { LeanClient } from '../../src/leanclient'
 import {
     collapseAllMessages,
     expandAllMessages,
@@ -17,6 +19,42 @@ import {
     waitForInfoView,
     withInfoView,
 } from '../helpers/wdio'
+
+// From now until `stopCountingRpcConnects`, counts the `$/lean/rpc/connect` requests that go
+// through the client of the active editor. The InfoView sends them to create RPC sessions.
+async function startCountingRpcConnects(): Promise<void> {
+    await browser.executeWorkbench(async vscode => {
+        const ext = vscode.extensions.getExtension('leanprover.lean4')
+        if (ext === undefined) throw new Error('the extension is not installed')
+        const exports = (await ext.activate()) as Exports
+        const client = (await exports.lean4EnabledFeatures).clientProvider.getActiveClient()
+        if (client === undefined) throw new Error('no client for the active editor')
+        const counted = client as LeanClient & { rpcConnects?: number }
+        counted.rpcConnects = 0
+        const sendRequest = client.sendRequest.bind(client)
+        // An own property hides the method of the class until `stopCountingRpcConnects` deletes it.
+        client.sendRequest = (method, params, token) => {
+            if (method === '$/lean/rpc/connect') counted.rpcConnects = (counted.rpcConnects ?? 0) + 1
+            return sendRequest(method, params, token)
+        }
+    })
+}
+
+// Returns the count of `startCountingRpcConnects`, and stops counting.
+async function stopCountingRpcConnects(): Promise<number> {
+    return browser.executeWorkbench(async vscode => {
+        const ext = vscode.extensions.getExtension('leanprover.lean4')
+        if (ext === undefined) throw new Error('the extension is not installed')
+        const exports = (await ext.activate()) as Exports
+        const client = (await exports.lean4EnabledFeatures).clientProvider.getActiveClient()
+        if (client === undefined) throw new Error('no client for the active editor')
+        const counted = client as LeanClient & { rpcConnects?: number }
+        Reflect.deleteProperty(client, 'sendRequest')
+        const count = counted.rpcConnects ?? 0
+        delete counted.rpcConnects
+        return count
+    })
+}
 
 describe('InfoView', function () {
     // Fixture layout (0-indexed):
@@ -535,5 +573,31 @@ describe('InfoView', function () {
                 !t.includes('1 + 1 = 2'),
             { label: 'the pin after Main.lean is closed' },
         )
+    })
+
+    // Stop.lean, zero-indexed line 4: goal `3 + 3 = 6`. No other test opens the file.
+    it('waits for a stopped server before it connects to a new file', async () => {
+        await openFixtureFile('Pin.lean')
+        await moveCursorTo(2, 0)
+        await waitForInfoView(t => t.includes('[1, 2, 3]'), { label: 'the `#eval` result', timeout: 2 * 60_000 })
+        try {
+            // `lean4.stopServer` does not show the message about the stopped server, so the
+            // InfoView keeps showing the infos.
+            await runCommand('lean4.stopServer')
+            await startCountingRpcConnects()
+            // The InfoView has no RPC session for Stop.lean, so it must create one.
+            await openFixtureFile('Stop.lean')
+            await moveCursorTo(4, 2)
+            // Enough time for many attempts: the InfoView waits 50 ms before it requests an info.
+            await browser.pause(3000)
+            await expect(await stopCountingRpcConnects()).toBe(0)
+        } finally {
+            await stopCountingRpcConnects()
+            await runCommand('lean4.restartServer')
+        }
+        await waitForInfoView(t => t.includes('Stop.lean:5:2') && t.includes('3 + 3 = 6'), {
+            label: 'the goal of Stop.lean after the restart',
+            timeout: 2 * 60_000,
+        })
     })
 })

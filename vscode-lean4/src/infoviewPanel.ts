@@ -4,7 +4,7 @@ import * as ls from 'vscode-languageserver-protocol'
 import { LeanClient } from './leanclient'
 import { EditorRpcApi, Rpc } from './rpc'
 import { LeanClientProvider } from './utils/clientProvider'
-import { parseExtUri } from './utils/exturi'
+import { ExtUri, parseExtUri } from './utils/exturi'
 import { viewColumnOfInfoView } from './utils/viewColumn'
 
 const keepAlivePeriodMs = 10000
@@ -107,6 +107,9 @@ export class InfoviewPanel implements Disposable {
      * to tuples [Response, Cancellation token]. */
     private clientRequests: Map<number, [Promise<any>, CancellationTokenSource]> = new Map()
 
+    /** Wakes the calls of {@link nextClientEvent} that still wait. */
+    private clientEventWaiters: Set<() => void> = new Set()
+
     /**
      * Opens the panel.
      * @param html the HTML of the panel, given the webview of the panel.
@@ -156,6 +159,7 @@ export class InfoviewPanel implements Disposable {
         this.api = this.rpc.getApi()
         this.panel.onDidDispose(() => {
             this.disposed = true
+            for (const wake of [...this.clientEventWaiters]) wake()
             this.clearNotificationHandlers()
             this.closeRpcSessions(null)
             for (const [, tk] of this.clientRequests.values()) tk.cancel()
@@ -183,6 +187,37 @@ export class InfoviewPanel implements Disposable {
                 this.rpcSessions.delete(sessionId)
             }
         }
+    }
+
+    /** Waits until the Lean server for `uri` runs, and returns its client. Fails when the panel closes before. */
+    private async runningClientFor(uri: ExtUri): Promise<LeanClient> {
+        for (;;) {
+            if (this.disposed) {
+                throw Error('InfoView disconnected while connecting to RPC session.')
+            }
+            const client = this.clientProvider.findClient(uri)
+            if (client?.isRunning()) {
+                return client
+            }
+            await this.nextClientEvent(client)
+        }
+    }
+
+    /** Resolves when `client` restarts, when a new client is added, or when the panel closes. */
+    private nextClientEvent(client: LeanClient | undefined): Promise<void> {
+        return new Promise(resolve => {
+            const subscriptions: Disposable[] = []
+            const wake = () => {
+                for (const s of subscriptions) s.dispose()
+                this.clientEventWaiters.delete(wake)
+                resolve()
+            }
+            subscriptions.push(this.clientProvider.clientAdded(wake))
+            if (client !== undefined) {
+                subscriptions.push(client.restarted(wake))
+            }
+            this.clientEventWaiters.add(wake)
+        })
     }
 
     private clearNotificationHandlers() {
@@ -285,10 +320,8 @@ export class InfoviewPanel implements Disposable {
                 if (extUri === undefined) {
                     throw Error(`Unexpected URI scheme: ${Uri.parse(uri).scheme}`)
                 }
-                const client = this.clientProvider.findClient(extUri)
-                if (client === undefined) {
-                    throw Error('No active Lean client.')
-                }
+                // The InfoView creates a new session at once when this request fails.
+                const client = await this.runningClientFor(extUri)
                 const sessionId = await rpcConnect(client, uri)
                 const session = new RpcSessionAtPos(client, sessionId, uri)
                 if (this.disposed) {
