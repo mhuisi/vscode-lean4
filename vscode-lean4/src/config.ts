@@ -1,3 +1,4 @@
+import { defaultInfoviewConfig, InfoviewConfig } from '@leanprover/infoview-api'
 import { ConfigurationTarget, ThemeColor, workspace } from 'vscode'
 import { PATH } from './utils/envPath'
 
@@ -106,19 +107,19 @@ export function getInfoViewAutoOpen(): boolean {
     return workspace.getConfiguration('lean4').get('infoViewAutoOpen', true)
 }
 
-export function getInfoViewAutoOpenShowsGoal(): boolean {
+function getInfoViewAutoOpenShowsGoal(): boolean {
     const val = workspace.getConfiguration('lean4.infoview').get<boolean>('autoOpenShowsGoal')
     if (val !== undefined) return val
     return workspace.getConfiguration('lean4').get('infoViewAutoOpenShowGoal', true)
 }
 
-export function getInfoViewAllErrorsOnLine(): boolean {
+function getInfoViewAllErrorsOnLine(): boolean {
     const val = workspace.getConfiguration('lean4.infoview').get<boolean>('allErrorsOnLine')
     if (val !== undefined) return val
     return workspace.getConfiguration('lean4').get('infoViewAllErrorsOnLine', true)
 }
 
-export function getInfoViewDebounceTime(): number {
+function getInfoViewDebounceTime(): number {
     return workspace.getConfiguration('lean4.infoview').get('debounceTime', 50)
 }
 
@@ -126,7 +127,7 @@ function getInfoViewShowExpectedType(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('showExpectedType', true)
 }
 
-export function getInfoViewExpectedTypeVisibility(): 'Expanded by default' | 'Collapsed by default' | 'Hidden' {
+function getInfoViewExpectedTypeVisibility(): 'Expanded by default' | 'Collapsed by default' | 'Hidden' {
     const show = getInfoViewShowExpectedType()
     const visibility = workspace.getConfiguration('lean4.infoview').get('expectedTypeVisibility', 'Expanded by default')
     if (!show && visibility === 'Expanded by default') {
@@ -135,40 +136,67 @@ export function getInfoViewExpectedTypeVisibility(): 'Expanded by default' | 'Co
     return visibility
 }
 
-export function getInfoViewShowGoalNames(): boolean {
+function getInfoViewShowGoalNames(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('showGoalNames', true)
 }
 
-export function getInfoViewEmphasizeFirstGoal(): boolean {
+function getInfoViewEmphasizeFirstGoal(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('emphasizeFirstGoal', false)
 }
 
-export function getInfoViewReverseTacticState(): boolean {
+function getInfoViewReverseTacticState(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('reverseTacticState', false)
 }
 
-export function getInfoViewHideTypeAssumptions(): boolean {
+function getInfoViewHideTypeAssumptions(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('hideTypeAssumptions', false)
 }
 
-export function getInfoViewHideInstanceAssumptions(): boolean {
+function getInfoViewHideInstanceAssumptions(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('hideInstanceAssumptions', false)
 }
 
-export function getInfoViewHideInaccessibleAssumptions(): boolean {
+function getInfoViewHideInaccessibleAssumptions(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('hideInaccessibleAssumptions', false)
 }
 
-export function getInfoViewHideLetValues(): boolean {
+function getInfoViewHideLetValues(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('hideLetValues', false)
 }
 
-export function getInfoViewShowTooltipOnHover(): boolean {
+function getInfoViewShowTooltipOnHover(): boolean {
     return workspace.getConfiguration('lean4.infoview').get('showTooltipOnHover', true)
 }
 
-export function getInfoViewMessageOrder(): 'Sort by proximity to text cursor' | 'Sort by message location' {
+function getInfoViewMessageOrder(): 'Sort by proximity to text cursor' | 'Sort by message location' {
     return workspace.getConfiguration('lean4.infoview').get('messageOrder', 'Sort by proximity to text cursor')
+}
+
+/** The settings that the InfoView reads, and that its context menu can save. */
+export function getInfoViewConfig(): InfoviewConfig {
+    return {
+        allErrorsOnLine: getInfoViewAllErrorsOnLine(),
+        autoOpenShowsGoal: getInfoViewAutoOpenShowsGoal(),
+        debounceTime: getInfoViewDebounceTime(),
+        expectedTypeVisibility: getInfoViewExpectedTypeVisibility(),
+        showGoalNames: getInfoViewShowGoalNames(),
+        emphasizeFirstGoal: getInfoViewEmphasizeFirstGoal(),
+        reverseTacticState: getInfoViewReverseTacticState(),
+        hideTypeAssumptions: getInfoViewHideTypeAssumptions(),
+        hideInstanceAssumptions: getInfoViewHideInstanceAssumptions(),
+        hideInaccessibleAssumptions: getInfoViewHideInaccessibleAssumptions(),
+        hideLetValues: getInfoViewHideLetValues(),
+        showTooltipOnHover: getInfoViewShowTooltipOnHover(),
+        messageOrder: getInfoViewMessageOrder(),
+    }
+}
+
+/** Saves the settings of `getInfoViewConfig` in the user settings, with the names of the `lean4.infoview` section. */
+export async function saveInfoViewConfig(config: InfoviewConfig): Promise<void> {
+    // `defaultInfoviewConfig` has all keys of `InfoviewConfig`.
+    for (const key of Object.keys(defaultInfoviewConfig) as (keyof InfoviewConfig)[]) {
+        await workspace.getConfiguration('lean4.infoview').update(key, config[key], ConfigurationTarget.Global)
+    }
 }
 
 export function shouldShowSetupWarnings(): boolean {

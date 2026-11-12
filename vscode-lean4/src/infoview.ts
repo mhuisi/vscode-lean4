@@ -13,7 +13,6 @@ import { join } from 'path'
 import {
     CancellationTokenSource,
     commands,
-    ConfigurationTarget,
     Diagnostic,
     Disposable,
     env,
@@ -31,23 +30,12 @@ import {
 import * as ls from 'vscode-languageserver-protocol'
 import {
     getEditorLineHeight,
-    getInfoViewAllErrorsOnLine,
     getInfoViewAutoOpen,
-    getInfoViewAutoOpenShowsGoal,
-    getInfoViewDebounceTime,
-    getInfoViewEmphasizeFirstGoal,
-    getInfoViewExpectedTypeVisibility,
-    getInfoViewHideInaccessibleAssumptions,
-    getInfoViewHideInstanceAssumptions,
-    getInfoViewHideLetValues,
-    getInfoViewHideTypeAssumptions,
-    getInfoViewMessageOrder,
-    getInfoViewReverseTacticState,
-    getInfoViewShowGoalNames,
-    getInfoViewShowTooltipOnHover,
+    getInfoViewConfig,
     getInfoViewStyle,
     minIfProd,
     prodOrDev,
+    saveInfoViewConfig,
 } from './config'
 import { LeanClient } from './leanclient'
 import { EditorRpcApi, Rpc } from './rpc'
@@ -190,47 +178,7 @@ export class InfoProvider implements Disposable {
     private clientRequests: Map<number, [Promise<any>, Disposable, CancellationTokenSource]> = new Map()
 
     private editorApi: EditorRpcApi = {
-        saveConfig: async (config: InfoviewConfig) => {
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('allErrorsOnLine', config.allErrorsOnLine, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('autoOpenShowsGoal', config.autoOpenShowsGoal, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('debounceTime', config.debounceTime, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('expectedTypeVisibility', config.expectedTypeVisibility, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('showGoalNames', config.showGoalNames, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('emphasizeFirstGoal', config.emphasizeFirstGoal, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('reverseTacticState', config.reverseTacticState, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('hideTypeAssumptions', config.hideTypeAssumptions, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('hideInstanceAssumptions', config.hideInstanceAssumptions, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('hideInaccessibleAssumptions', config.hideInaccessibleAssumptions, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('hideLetValues', config.hideLetValues, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('showTooltipOnHover', config.showTooltipOnHover, ConfigurationTarget.Global)
-            await workspace
-                .getConfiguration('lean4.infoview')
-                .update('messageOrder', config.messageOrder, ConfigurationTarget.Global)
-        },
+        saveConfig: async (config: InfoviewConfig) => saveInfoViewConfig(config),
         startClientRequest: async (uri: string, method: string, params: any): Promise<number> => {
             const extUri = parseExtUri(uri)
             if (extUri === undefined) {
@@ -643,21 +591,7 @@ export class InfoProvider implements Disposable {
     }
 
     private async sendConfig() {
-        await this.webviewPanel?.api.changedInfoviewConfig({
-            allErrorsOnLine: getInfoViewAllErrorsOnLine(),
-            autoOpenShowsGoal: getInfoViewAutoOpenShowsGoal(),
-            debounceTime: getInfoViewDebounceTime(),
-            expectedTypeVisibility: getInfoViewExpectedTypeVisibility(),
-            showGoalNames: getInfoViewShowGoalNames(),
-            emphasizeFirstGoal: getInfoViewEmphasizeFirstGoal(),
-            reverseTacticState: getInfoViewReverseTacticState(),
-            hideTypeAssumptions: getInfoViewHideTypeAssumptions(),
-            hideInstanceAssumptions: getInfoViewHideInstanceAssumptions(),
-            hideInaccessibleAssumptions: getInfoViewHideInaccessibleAssumptions(),
-            hideLetValues: getInfoViewHideLetValues(),
-            showTooltipOnHover: getInfoViewShowTooltipOnHover(),
-            messageOrder: getInfoViewMessageOrder(),
-        })
+        await this.webviewPanel?.api.changedInfoviewConfig(getInfoViewConfig())
     }
 
     private static async getDiagnosticParams(
